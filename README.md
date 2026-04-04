@@ -35,6 +35,18 @@ A production-grade, full-stack web application that aggregates **200+ public API
 
 ---
 
+## Screenshots
+
+> **Live Demo:** [unified-world-data.vercel.app](https://unified-world-data.vercel.app)
+
+| Overview | Markets | Earthquakes |
+|----------|---------|-------------|
+| ![Overview](./docs/screenshots/overview.png) | ![Markets](./docs/screenshots/markets.png) | ![Earthquakes](./docs/screenshots/earthquakes.png) |
+
+*Visit the [live demo](https://unified-world-data.vercel.app) to see all 15 tabs in action.*
+
+---
+
 ## What This Does
 
 This is a real-time global data dashboard that pulls live data from 200+ free public APIs and displays it across 15 interactive tabs. The Overview page shows 40+ live-updating world statistics (births, deaths, CO2, energy, GDP, internet traffic, etc.) that tick every second. Every chart auto-refreshes. Everything works without any API keys.
@@ -206,6 +218,16 @@ docker run -p 3000:3000 unified-world-data
 | Per-tab error boundaries | One failed API never crashes the entire dashboard |
 | CSS variables for theming | Instant light/dark switch without re-render |
 | Multi-stage Docker | Minimal 120MB production image vs 1.2GB dev |
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up locally and contribute new data sources |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, circuit breaker, SWR, SSE, Zod strategy |
+| [docs/API.md](docs/API.md) | All API endpoints — method, shape, cache interval, source |
 
 ---
 
