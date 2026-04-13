@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
-const HeroGlobe = dynamic(() => import("@/components/hero/HeroGlobe"), { ssr: false });
+const CesiumGlobe = dynamic(() => import("@/components/hero/CesiumGlobe"), { ssr: false });
 
 interface HeroSectionProps {
   onEnter: () => void;
@@ -27,7 +27,7 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
       <nav className="hero-nav">
         <div className="hero-nav-brand">
           <span className="hero-brand-icon">🌍</span>
-          <span className="hero-brand-text">EARTH PULSE</span>
+          <span className="hero-brand-text">SAPIEN SIGNAL</span>
         </div>
 
         <div className="hero-nav-links">
@@ -112,7 +112,7 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
             animate={mounted ? { opacity: 1, scale: 1 } : {}}
             transition={{ delay: 0.2, duration: 1, ease: "easeOut" }}
           >
-            <HeroGlobe />
+            <CesiumGlobe />
           </motion.div>
 
           <motion.span
