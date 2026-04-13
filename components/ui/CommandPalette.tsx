@@ -9,14 +9,25 @@ interface CommandPaletteProps {
   currentTab: TabId;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function CommandPalette({ onSelectTab, currentTab }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const debouncedQuery = useDebounce(query, 100);
+
   const filtered = TABS.filter(
-    (t) => !query || t.label.toLowerCase().includes(query.toLowerCase()) || t.id.includes(query.toLowerCase())
+    (t) => !debouncedQuery || t.label.toLowerCase().includes(debouncedQuery.toLowerCase()) || t.id.includes(debouncedQuery.toLowerCase())
   );
 
   const handleSelect = useCallback((id: TabId) => {

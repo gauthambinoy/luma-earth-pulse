@@ -1,9 +1,56 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET() {
+// Rate limiter configuration — configurable via environment variables
+const MAX_CONNECTIONS_PER_IP = parseInt(process.env.SSE_MAX_CONNECTIONS_PER_IP || "3", 10);
+const RATE_WINDOW_MS = parseInt(process.env.SSE_RATE_WINDOW_MS || "60000", 10);
+
+// Simple in-memory rate limiter for SSE connections
+const connections = new Map<string, { count: number; lastReset: number }>();
+
+function getClientIp(request: NextRequest): string {
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || request.headers.get("x-real-ip")
+    || "unknown";
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = connections.get(ip);
+
+  if (!record || now - record.lastReset > RATE_WINDOW_MS) {
+    connections.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+
+  if (record.count >= MAX_CONNECTIONS_PER_IP) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+function releaseConnection(ip: string) {
+  const record = connections.get(ip);
+  if (record && record.count > 0) {
+    record.count--;
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const clientIp = getClientIp(request);
+
+  if (!checkRateLimit(clientIp)) {
+    return NextResponse.json(
+      { error: "Too many concurrent SSE connections. Max 3 per client." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -51,6 +98,7 @@ export async function GET() {
         running = false;
         clearInterval(issInterval);
         clearInterval(popInterval);
+        releaseConnection(clientIp);
         try { controller.close(); } catch { /* already closed */ }
       }, 290000);
     },

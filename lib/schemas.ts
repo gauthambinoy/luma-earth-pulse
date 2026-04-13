@@ -101,3 +101,42 @@ export const HNStorySchema = z.object({
   time: z.number().default(0),
   descendants: z.number().default(0),
 });
+
+// ── Energy ──
+export const EnergyCountrySchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  flag: z.string(),
+  annualTWh: z.number(),
+  consumedTWh: z.number().default(0),
+  perCapitaMWh: z.number().default(0),
+  mwhPerSecond: z.number().default(0),
+  mix: z.object({
+    fossil: z.number().default(0),
+    nuclear: z.number().default(0),
+    renewable: z.number().default(0),
+  }),
+  population: z.number().default(0),
+});
+
+export const EnergySourceSchema = z.object({
+  name: z.string(),
+  share: z.number(),
+  annualTWh: z.number(),
+  color: z.string(),
+  icon: z.string(),
+});
+
+export const EnergyResponseSchema = z.object({
+  global: z.object({
+    totalAnnualTWh: z.number(),
+    consumedTWh: z.number().default(0),
+    mwhPerSecond: z.number().default(0),
+    renewableShare: z.number().default(0),
+    fossilShare: z.number().default(0),
+    nuclearShare: z.number().default(0),
+  }),
+  countries: z.array(EnergyCountrySchema).default([]),
+  sources: z.array(EnergySourceSchema).default([]),
+  timestamp: z.number(),
+});

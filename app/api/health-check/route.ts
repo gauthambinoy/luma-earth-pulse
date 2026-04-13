@@ -13,6 +13,7 @@ const ENDPOINTS = [
   { name: "ISS (Open Notify)", url: "http://api.open-notify.org/iss-now.json", critical: false },
   { name: "Solar (NOAA)", url: "https://services.swpc.noaa.gov/products/summary/solar-wind-speed.json", critical: false },
   { name: "Air Quality (OpenAQ)", url: "https://api.openaq.org/v2/latest?limit=1", critical: false },
+  { name: "Energy (IEA/EIA)", url: "https://api.eia.gov/v2/", critical: false },
   { name: "GitHub API", url: "https://api.github.com/zen", critical: false },
   { name: "Hacker News", url: "https://hacker-news.firebaseio.com/v0/topstories.json?limitToFirst=1&orderBy=%22$key%22", critical: false },
 ];
@@ -35,7 +36,10 @@ export async function GET() {
           critical: ep.critical,
           lastChecked: Date.now(),
         };
-      } catch {
+      } catch (err) {
+        // Sanitize error message to avoid exposing internal details
+        const rawMsg = err instanceof Error ? err.message : "Unknown error";
+        const safeMsg = rawMsg.replace(/\/[^\s]+/g, "[path]").slice(0, 100);
         return {
           name: ep.name,
           status: "error" as const,
@@ -43,6 +47,7 @@ export async function GET() {
           statusCode: 0,
           critical: ep.critical,
           lastChecked: Date.now(),
+          error: `${ep.name} failed: ${safeMsg}`,
         };
       }
     })

@@ -47,6 +47,7 @@ export const TABS = [
   { id: "markets",     icon: "💹", label: "Markets" },
   { id: "forex",       icon: "💱", label: "Forex" },
   { id: "economy",     icon: "📊", label: "Economy" },
+  { id: "energy",      icon: "🔋", label: "Energy" },
   { id: "health",      icon: "🏥", label: "Health" },
   { id: "countries",   icon: "🗺",  label: "Countries" },
   { id: "space",       icon: "🚀", label: "Space & ISS" },
