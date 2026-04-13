@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 
-const LandingPage = dynamic(() => import("@/components/LandingPage"), { ssr: false });
-const Dashboard = dynamic(() => import("@/components/Dashboard"), { ssr: false });
+const HeroSection = dynamic(() => import("@/components/hero/HeroSection"), { ssr: false });
+const Dashboard = dynamic(() => import("@/components/Dashboard"), {
+  loading: () => <SkeletonLoader height={600} message="Loading dashboard..." />,
+});
 
 function HomeInner() {
   const searchParams = useSearchParams();
@@ -20,10 +22,14 @@ function HomeInner() {
   }, [searchParams]);
 
   if (showDashboard) {
-    return <Dashboard />;
+    return (
+      <Suspense fallback={<SkeletonLoader height={600} message="Loading dashboard..." />}>
+        <Dashboard />
+      </Suspense>
+    );
   }
 
-  return <LandingPage onEnterDashboard={() => setShowDashboard(true)} />;
+  return <HeroSection onEnter={() => setShowDashboard(true)} />;
 }
 
 export default function Home() {
