@@ -157,7 +157,7 @@ describe('NotificationToast', () => {
     })
 
     // Should keep max 5 (latest 4 + the new one)
-    const count = parseInt(screen.getByTestId('count').textContent || '0')
+    const count = parseInt(screen.getByTestId('count').textContent || '0', 10)
     expect(count).toBeLessThanOrEqual(5)
   })
 })

@@ -37,7 +37,9 @@ export async function GET() {
           lastChecked: Date.now(),
         };
       } catch (err) {
-        const reason = err instanceof Error ? err.message : "Unknown error";
+        // Sanitize error message to avoid exposing internal details
+        const rawMsg = err instanceof Error ? err.message : "Unknown error";
+        const safeMsg = rawMsg.replace(/\/[^\s]+/g, "[path]").slice(0, 100);
         return {
           name: ep.name,
           status: "error" as const,
@@ -45,7 +47,7 @@ export async function GET() {
           statusCode: 0,
           critical: ep.critical,
           lastChecked: Date.now(),
-          error: `${ep.name} failed: ${reason}`,
+          error: `${ep.name} failed: ${safeMsg}`,
         };
       }
     })

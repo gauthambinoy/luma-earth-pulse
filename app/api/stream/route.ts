@@ -4,10 +4,12 @@ import type { NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+// Rate limiter configuration — configurable via environment variables
+const MAX_CONNECTIONS_PER_IP = parseInt(process.env.SSE_MAX_CONNECTIONS_PER_IP || "3", 10);
+const RATE_WINDOW_MS = parseInt(process.env.SSE_RATE_WINDOW_MS || "60000", 10);
+
 // Simple in-memory rate limiter for SSE connections
 const connections = new Map<string, { count: number; lastReset: number }>();
-const MAX_CONNECTIONS_PER_IP = 3;
-const RATE_WINDOW_MS = 60_000; // 1 minute
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
