@@ -11,11 +11,13 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 interface CesiumGlobeProps {
   onReady?: () => void;
   flyToLocation?: { lat: number; lng: number; altitude?: number } | null;
+  showOverlays?: boolean;
 }
 
-export default function CesiumGlobe({ onReady, flyToLocation }: CesiumGlobeProps) {
+export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = true }: CesiumGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
+  const overlayCleanupRef = useRef<{ remove: () => void } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -181,6 +183,17 @@ export default function CesiumGlobe({ onReady, flyToLocation }: CesiumGlobeProps
 
       setLoading(false);
       onReady?.();
+
+      // Load data overlays (earthquake pins, ISS tracker, weather markers)
+      if (showOverlays) {
+        try {
+          const { addAllOverlays } = await import("./overlays");
+          const cleanup = await addAllOverlays(viewer);
+          overlayCleanupRef.current = cleanup;
+        } catch (err) {
+          console.warn("Failed to load globe overlays:", err);
+        }
+      }
     } catch (err) {
       console.error("Failed to initialize CesiumJS:", err);
       setError("Failed to load 3D globe");
@@ -193,6 +206,10 @@ export default function CesiumGlobe({ onReady, flyToLocation }: CesiumGlobeProps
     initCesium();
 
     return () => {
+      if (overlayCleanupRef.current) {
+        overlayCleanupRef.current.remove();
+        overlayCleanupRef.current = null;
+      }
       if (viewerRef.current) {
         try {
           const viewer = viewerRef.current;
@@ -205,25 +222,28 @@ export default function CesiumGlobe({ onReady, flyToLocation }: CesiumGlobeProps
     };
   }, [initCesium]);
 
-  // Fly to location when prop changes
+  // Cinematic fly-to when location prop changes
   useEffect(() => {
     if (!flyToLocation || !viewerRef.current) return;
 
     const Cesium = require("cesium");
     const viewer = viewerRef.current;
+    const altitude = flyToLocation.altitude || 2000000;
 
+    // Two-phase cinematic: pull back → sweep in
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(
         flyToLocation.lng,
         flyToLocation.lat,
-        flyToLocation.altitude || 2000000
+        altitude
       ),
       orientation: {
-        heading: Cesium.Math.toRadians(0),
-        pitch: Cesium.Math.toRadians(-45),
+        heading: Cesium.Math.toRadians(20),
+        pitch: Cesium.Math.toRadians(-35),
         roll: 0,
       },
-      duration: 2.5,
+      duration: 3,
+      easingFunction: Cesium.EasingFunction.QUINTIC_IN_OUT,
     });
   }, [flyToLocation]);
 
