@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 type Theme = "light" | "dark";
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -15,10 +15,9 @@ export function useTheme() {
       setThemeState(stored);
       document.documentElement.classList.toggle("dark", stored === "dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initial = prefersDark ? "dark" : "light";
-      setThemeState(initial);
-      document.documentElement.classList.toggle("dark", initial === "dark");
+      // Default to dark mode for premium glassmorphism experience
+      setThemeState("dark");
+      document.documentElement.classList.add("dark");
     }
   }, []);
 

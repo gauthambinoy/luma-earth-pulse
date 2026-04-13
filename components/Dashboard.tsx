@@ -199,7 +199,7 @@ function DashboardInner() {
         </div>
 
         {/* Content with liquid glass transitions */}
-        <div className="h-[calc(100vh-64px)] overflow-y-auto px-8 py-6" style={{ background: "var(--bg-primary)" }}>
+        <div className="h-[calc(100vh-64px)] overflow-y-auto px-8 py-6" style={{ background: "#060b16" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}

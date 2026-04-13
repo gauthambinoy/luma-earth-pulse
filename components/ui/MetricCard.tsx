@@ -54,14 +54,18 @@ export default function MetricCard({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={() => insight && setShowInsight(true)}
-      className="card-glow spotlight-card group relative overflow-hidden rounded-2xl border p-5"
+      className="group relative overflow-hidden rounded-2xl border p-5"
       style={{
-        background: "var(--bg-card)",
-        borderColor: glow ? `${accent}30` : "var(--border)",
+        background: "rgba(10,15,30,0.55)",
+        backdropFilter: "blur(20px) saturate(1.4)",
+        borderColor: glow ? `${accent}30` : "rgba(255,255,255,0.06)",
+        boxShadow: `0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)`,
         transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-        transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease",
       }}
     >
+      {/* Shine line at top */}
+      <div className="pointer-events-none absolute left-0 right-0 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 50%, transparent)" }} />
       {/* Aurora top line */}
       {glow && (
         <div
@@ -83,14 +87,14 @@ export default function MetricCard({
 
       <div className="relative">
         <div
-          className="mb-2 text-sm font-semibold uppercase tracking-wide"
-          style={{ color: "var(--text-tertiary)" }}
+          className="mb-2 text-[10px] font-bold uppercase tracking-wider"
+          style={{ color: "rgba(255,255,255,0.35)" }}
         >
           {label}
         </div>
         <div
-          className="text-3xl font-bold tracking-tight"
-          style={{ color: accent, fontVariantNumeric: "tabular-nums" }}
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: accent, fontVariantNumeric: "tabular-nums", textShadow: `0 0 20px ${accent}33` }}
         >
           {numeric != null ? <AnimatedNumber value={numeric} format={format} /> : value}
         </div>
