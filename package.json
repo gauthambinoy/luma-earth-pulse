@@ -14,8 +14,6 @@
     "postinstall": "node scripts/copy-cesium.js"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.0",
     "cesium": "^1.140.0",
     "framer-motion": "^12.38.0",
     "next": "^14.2.35",
@@ -26,7 +24,6 @@
     "recharts": "^3.8.1",
     "resium": "^1.20.1",
     "swr": "^2.4.1",
-    "three": "^0.183.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
