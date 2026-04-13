@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Unified World Data — Live Global Dashboard",
+  title: "Luma Earth Pulse — Live Global Dashboard · 200+ APIs",
   description:
-    "Real-time global data dashboard with 200+ APIs — weather, earthquakes, crypto, forex, economy, health, countries, space, ISS tracker, air quality, tech pulse, news.",
+    "Real-time global data dashboard with 200+ APIs — 3D interactive Earth, weather, earthquakes, crypto, forex, economy, energy, health, countries, space, ISS tracker, air quality, tech pulse, news. Zoom, rotate, explore the planet.",
 };
 
 export default function RootLayout({
