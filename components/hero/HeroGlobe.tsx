@@ -1,299 +1,225 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef, useMemo, Suspense, useCallback, useState, useEffect } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { OrbitControls, Stars } from "@react-three/drei";
+import * as THREE from "three";
 
-interface Particle {
-  r: number;
-  alpha: number;
-  speed: number;
-  angle: number;
-  orbit: number;
+/* ─── Atmosphere shader ─── */
+const AtmosphereVertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const AtmosphereFragmentShader = `
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  uniform vec3 glowColor;
+  uniform float intensity;
+  uniform float power;
+  void main() {
+    vec3 viewDir = normalize(-vPosition);
+    float rim = 1.0 - max(0.0, dot(viewDir, vNormal));
+    float glow = pow(rim, power) * intensity;
+    gl_FragColor = vec4(glowColor, glow);
+  }
+`;
+
+/* ─── Earth sphere ─── */
+function Earth() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
+  const nightRef = useRef<THREE.Mesh>(null);
+
+  /* Textures sourced from public-domain NASA imagery via the three-globe
+     project (https://github.com/vasturiano/three-globe).
+     Located in /public/textures/ — equirectangular projection, any resolution. */
+  const [dayMap, bumpMap, specMap, nightMap, cloudMap] = useLoader(
+    THREE.TextureLoader,
+    [
+      "/textures/earth-blue-marble.jpg",
+      "/textures/earth-topology.png",
+      "/textures/earth-water.png",
+      "/textures/earth-night.jpg",
+      "/textures/earth-clouds.png",
+    ]
+  );
+
+  // Improve texture quality
+  useMemo(() => {
+    [dayMap, bumpMap, specMap, nightMap, cloudMap].forEach((t) => {
+      if (t) {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 16;
+        t.minFilter = THREE.LinearMipMapLinearFilter;
+        t.magFilter = THREE.LinearFilter;
+      }
+    });
+  }, [dayMap, bumpMap, specMap, nightMap, cloudMap]);
+
+  // Night-side material: additive blend shows city lights only on dark side
+  const nightMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: nightMap,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+      }),
+    [nightMap]
+  );
+
+  // Smooth auto-rotate
+  useFrame((_state, delta) => {
+    const speed = 0.02;
+    if (meshRef.current) meshRef.current.rotation.y += speed * delta;
+    if (nightRef.current) nightRef.current.rotation.y += speed * delta;
+    if (cloudsRef.current) cloudsRef.current.rotation.y += speed * delta * 1.08;
+  });
+
+  const atmosphereMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: AtmosphereVertexShader,
+        fragmentShader: AtmosphereFragmentShader,
+        uniforms: {
+          glowColor: { value: new THREE.Color(0.3, 0.6, 1.0) },
+          intensity: { value: 0.7 },
+          power: { value: 3.5 },
+        },
+        side: THREE.BackSide,
+        transparent: true,
+        depthWrite: false,
+      }),
+    []
+  );
+
+  return (
+    <group>
+      {/* Directional light simulating the sun */}
+      <directionalLight position={[5, 3, 5]} intensity={2.5} color={0xffffff} />
+      <ambientLight intensity={0.08} />
+
+      {/* Earth day surface */}
+      <mesh ref={meshRef} rotation={[0.41, 0, 0]}>
+        <sphereGeometry args={[2, 128, 128]} />
+        <meshPhongMaterial
+          map={dayMap}
+          bumpMap={bumpMap}
+          bumpScale={0.04}
+          specularMap={specMap}
+          specular={new THREE.Color(0x333333)}
+          shininess={15}
+        />
+      </mesh>
+
+      {/* Night lights layer */}
+      <mesh ref={nightRef} rotation={[0.41, 0, 0]}>
+        <sphereGeometry args={[2.001, 128, 128]} />
+        <primitive object={nightMaterial} attach="material" />
+      </mesh>
+
+      {/* Clouds layer */}
+      <mesh ref={cloudsRef} rotation={[0.41, 0, 0]}>
+        <sphereGeometry args={[2.02, 96, 96]} />
+        <meshPhongMaterial map={cloudMap} transparent opacity={0.35} depthWrite={false} />
+      </mesh>
+
+      {/* Atmosphere glow */}
+      <mesh>
+        <sphereGeometry args={[2.25, 64, 64]} />
+        <primitive object={atmosphereMaterial} attach="material" />
+      </mesh>
+    </group>
+  );
 }
 
-interface CityLight {
-  angle: number;
-  lat: number;
-  brightness: number;
-  size: number;
+/* ─── Controls with smooth damping ─── */
+function GlobeControls() {
+  return (
+    <OrbitControls
+      enablePan={false}
+      enableZoom={true}
+      enableRotate={true}
+      autoRotate={false}
+      minDistance={2.8}
+      maxDistance={8}
+      zoomSpeed={0.6}
+      rotateSpeed={0.4}
+      enableDamping={true}
+      dampingFactor={0.08}
+      minPolarAngle={0.2}
+      maxPolarAngle={Math.PI - 0.2}
+    />
+  );
 }
 
-export default function HeroGlobe() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+/* ─── Loading fallback ─── */
+function GlobeLoader() {
+  return (
+    <div className="globe-loader">
+      <div className="globe-loader-ring" />
+    </div>
+  );
+}
+
+/* ─── Touch hint overlay ─── */
+function TouchHint() {
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const timer = setTimeout(() => setVisible(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
-    let animId: number;
-    let w: number;
-    let h: number;
+  if (!visible) return null;
 
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
+  return (
+    <div className="globe-touch-hint">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path
+          d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span>Drag to explore · Scroll to zoom</span>
+    </div>
+  );
+}
 
-    // Stars
-    const stars: { x: number; y: number; r: number; a: number; s: number }[] = [];
-    for (let i = 0; i < 150; i++) {
-      stars.push({
-        x: Math.random(),
-        y: Math.random(),
-        r: Math.random() * 1.2 + 0.3,
-        a: Math.random() * 0.6 + 0.1,
-        s: Math.random() * 0.005 + 0.002,
-      });
-    }
+/* ─── Main export ─── */
+export default function HeroGlobe() {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-    // Floating particles around the globe
-    const particles: Particle[] = [];
-    for (let i = 0; i < 18; i++) {
-      particles.push({
-        r: Math.random() * 3 + 1.5,
-        alpha: Math.random() * 0.6 + 0.2,
-        speed: Math.random() * 0.0004 + 0.0002,
-        angle: Math.random() * Math.PI * 2,
-        orbit: 0.55 + Math.random() * 0.5,
-      });
-    }
-
-    // City lights on the globe
-    const cityPositions = [
-      { angle: 0.0, lat: 0.35 },
-      { angle: -0.1, lat: 0.33 },
-      { angle: 0.22, lat: 0.35 },
-      { angle: -1.3, lat: 0.3 },
-      { angle: -1.5, lat: 0.28 },
-      { angle: -2.1, lat: 0.25 },
-      { angle: 2.4, lat: 0.24 },
-      { angle: 2.0, lat: 0.18 },
-      { angle: 1.3, lat: 0.15 },
-      { angle: 0.6, lat: 0.21 },
-      { angle: -0.8, lat: 0.32 },
-      { angle: 2.6, lat: -0.25 },
-      { angle: -0.8, lat: -0.16 },
-      { angle: 0.05, lat: 0.37 },
-      { angle: 1.8, lat: 0.25 },
-      { angle: 0.4, lat: -0.02 },
-      { angle: -1.7, lat: 0.26 },
-      { angle: -0.06, lat: 0.3 },
-      { angle: 0.2, lat: 0.3 },
-      { angle: 1.7, lat: 0.08 },
-      { angle: 1.9, lat: 0.01 },
-      { angle: -0.65, lat: -0.23 },
-      { angle: 0.3, lat: 0.22 },
-      { angle: -1.4, lat: 0.2 },
-    ];
-
-    const cityLights: CityLight[] = [];
-    for (const c of cityPositions) {
-      cityLights.push({
-        angle: c.angle,
-        lat: c.lat,
-        brightness: 0.5 + Math.random() * 0.5,
-        size: 1.2 + Math.random() * 1.8,
-      });
-      for (let j = 0; j < 2 + Math.floor(Math.random() * 3); j++) {
-        cityLights.push({
-          angle: c.angle + (Math.random() - 0.5) * 0.12,
-          lat: c.lat + (Math.random() - 0.5) * 0.06,
-          brightness: 0.2 + Math.random() * 0.3,
-          size: 0.5 + Math.random() * 0.8,
-        });
-      }
-    }
-
-    let rotation = 0;
-
-    function draw() {
-      ctx!.clearRect(0, 0, w, h);
-
-      const cx = w * 0.5;
-      const cy = h * 0.5;
-      const radius = Math.min(w, h) * 0.38;
-      const time = Date.now() * 0.001;
-
-      // Stars with twinkle
-      for (const star of stars) {
-        const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time * star.s * 100 + star.x * 100));
-        ctx!.beginPath();
-        ctx!.arc(star.x * w, star.y * h, star.r, 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(180, 210, 255, ${star.a * twinkle * 0.4})`;
-        ctx!.fill();
-      }
-
-      // Outer glow (atmosphere)
-      const outerGlow = ctx!.createRadialGradient(cx, cy, radius * 0.9, cx, cy, radius * 1.4);
-      outerGlow.addColorStop(0, "rgba(50, 140, 255, 0.12)");
-      outerGlow.addColorStop(0.4, "rgba(30, 100, 220, 0.06)");
-      outerGlow.addColorStop(0.7, "rgba(20, 80, 200, 0.02)");
-      outerGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx!.fillStyle = outerGlow;
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, radius * 1.4, 0, Math.PI * 2);
-      ctx!.fill();
-
-      // Earth body
-      const earthGrad = ctx!.createRadialGradient(
-        cx - radius * 0.25, cy - radius * 0.25, 0,
-        cx, cy, radius
-      );
-      earthGrad.addColorStop(0, "#1a5fb4");
-      earthGrad.addColorStop(0.3, "#0f4a8c");
-      earthGrad.addColorStop(0.6, "#0a3366");
-      earthGrad.addColorStop(0.85, "#062040");
-      earthGrad.addColorStop(1, "#03101f");
-      ctx!.fillStyle = earthGrad;
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx!.fill();
-
-      // Atmosphere rings
-      ctx!.strokeStyle = "rgba(80, 160, 255, 0.2)";
-      ctx!.lineWidth = 2;
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, radius + 3, 0, Math.PI * 2);
-      ctx!.stroke();
-
-      ctx!.strokeStyle = "rgba(80, 160, 255, 0.06)";
-      ctx!.lineWidth = 1;
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, radius + 8, 0, Math.PI * 2);
-      ctx!.stroke();
-
-      // Clip for globe content
-      ctx!.save();
-      ctx!.beginPath();
-      ctx!.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx!.clip();
-
-      // Continent shapes
-      const drawContinent = (
-        startAngle: number,
-        latCenter: number,
-        cWidth: number,
-        cHeight: number,
-        color: string
-      ) => {
-        const a = startAngle + rotation;
-        const cosA = Math.cos(a);
-        if (cosA < -0.15) return;
-        const opacity = Math.max(0, cosA) * 0.3;
-        const px = cx + Math.sin(a) * radius * 0.85;
-        const py = cy + latCenter * radius;
-        ctx!.fillStyle = color.replace("OPACITY", String(opacity));
-        ctx!.beginPath();
-        ctx!.ellipse(px, py, cWidth * radius * Math.max(0.1, cosA), cHeight * radius, 0, 0, Math.PI * 2);
-        ctx!.fill();
-      };
-
-      drawContinent(-0.05, -0.05, 0.14, 0.1, "rgba(34, 120, 80, OPACITY)");
-      drawContinent(0.0, 0.18, 0.1, 0.22, "rgba(40, 110, 70, OPACITY)");
-      drawContinent(-1.4, -0.08, 0.22, 0.15, "rgba(30, 100, 65, OPACITY)");
-      drawContinent(-0.9, 0.22, 0.09, 0.2, "rgba(30, 95, 60, OPACITY)");
-      drawContinent(1.5, -0.05, 0.28, 0.14, "rgba(35, 110, 70, OPACITY)");
-      drawContinent(2.3, 0.28, 0.09, 0.06, "rgba(35, 105, 65, OPACITY)");
-      drawContinent(-0.6, -0.35, 0.06, 0.04, "rgba(40, 115, 75, OPACITY)");
-
-      // City lights
-      for (const city of cityLights) {
-        const a = city.angle + rotation;
-        const cosA = Math.cos(a);
-        if (cosA < 0) continue;
-
-        const px = cx + Math.sin(a) * radius * 0.85 * Math.cos(city.lat);
-        const py = cy - city.lat * radius * 0.85;
-        const brightness = city.brightness * cosA;
-
-        const glow = ctx!.createRadialGradient(px, py, 0, px, py, city.size * 4);
-        glow.addColorStop(0, `rgba(255, 240, 180, ${brightness * 0.5})`);
-        glow.addColorStop(0.4, `rgba(255, 210, 120, ${brightness * 0.2})`);
-        glow.addColorStop(1, "rgba(255, 200, 100, 0)");
-        ctx!.fillStyle = glow;
-        ctx!.beginPath();
-        ctx!.arc(px, py, city.size * 4, 0, Math.PI * 2);
-        ctx!.fill();
-
-        ctx!.fillStyle = `rgba(255, 250, 220, ${brightness * 0.9})`;
-        ctx!.beginPath();
-        ctx!.arc(px, py, city.size * 0.5, 0, Math.PI * 2);
-        ctx!.fill();
-      }
-
-      ctx!.restore();
-
-      // Sun highlight (top-right)
-      const sunGrad = ctx!.createRadialGradient(
-        cx + radius * 0.6, cy - radius * 0.5, 0,
-        cx + radius * 0.6, cy - radius * 0.5, radius * 0.7
-      );
-      sunGrad.addColorStop(0, "rgba(200, 230, 255, 0.15)");
-      sunGrad.addColorStop(0.3, "rgba(150, 200, 255, 0.06)");
-      sunGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx!.fillStyle = sunGrad;
-      ctx!.beginPath();
-      ctx!.arc(cx + radius * 0.6, cy - radius * 0.5, radius * 0.7, 0, Math.PI * 2);
-      ctx!.fill();
-
-      // Lens flare
-      const flareGrad = ctx!.createLinearGradient(cx - radius * 1.5, cy, cx + radius * 1.5, cy);
-      flareGrad.addColorStop(0, "rgba(100, 180, 255, 0)");
-      flareGrad.addColorStop(0.3, "rgba(100, 180, 255, 0.02)");
-      flareGrad.addColorStop(0.5, "rgba(150, 210, 255, 0.06)");
-      flareGrad.addColorStop(0.7, "rgba(100, 180, 255, 0.02)");
-      flareGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
-      ctx!.fillStyle = flareGrad;
-      ctx!.fillRect(cx - radius * 1.5, cy - 1, radius * 3, 2);
-
-      // Floating particles
-      for (const p of particles) {
-        p.angle += p.speed;
-        const px = cx + Math.cos(p.angle) * radius * p.orbit;
-        const py = cy + Math.sin(p.angle) * radius * p.orbit * 0.6;
-        const pAlpha = p.alpha * (0.5 + 0.5 * Math.sin(time * 2 + p.angle * 3));
-
-        const pGlow = ctx!.createRadialGradient(px, py, 0, px, py, p.r * 3);
-        pGlow.addColorStop(0, `rgba(150, 210, 255, ${pAlpha * 0.5})`);
-        pGlow.addColorStop(1, "rgba(150, 210, 255, 0)");
-        ctx!.fillStyle = pGlow;
-        ctx!.beginPath();
-        ctx!.arc(px, py, p.r * 3, 0, Math.PI * 2);
-        ctx!.fill();
-
-        ctx!.fillStyle = `rgba(200, 230, 255, ${pAlpha})`;
-        ctx!.beginPath();
-        ctx!.arc(px, py, p.r, 0, Math.PI * 2);
-        ctx!.fill();
-      }
-
-      rotation += 0.0006;
-      animId = requestAnimationFrame(draw);
-    }
-
-    draw();
-
-    const onResize = () => resize();
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", onResize);
-    };
+  const handleCreated = useCallback((state: { gl: THREE.WebGLRenderer }) => {
+    state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    state.gl.toneMapping = THREE.ACESFilmicToneMapping;
+    state.gl.toneMappingExposure = 1.2;
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="h-full w-full"
-      aria-label="Rotating 3D globe visualization"
-      role="img"
-    />
+    <div ref={containerRef} className="hero-globe-inner" role="img" aria-label="Interactive 3D Earth globe – drag to rotate, scroll to zoom">
+      <Suspense fallback={<GlobeLoader />}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 45 }}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          dpr={[1, 2]}
+          onCreated={handleCreated}
+          style={{ background: "transparent" }}
+        >
+          <Stars radius={100} depth={60} count={3000} factor={4} saturation={0} fade speed={0.5} />
+          <Earth />
+          <GlobeControls />
+        </Canvas>
+      </Suspense>
+      <TouchHint />
+    </div>
   );
 }
