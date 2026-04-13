@@ -48,11 +48,21 @@ export default function OverviewTab() {
   return (
     <div>
       {/* Real-time indicator bar */}
-      <div className="mb-5 flex items-center gap-3 rounded-2xl border px-5 py-3"
-        style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+      <div
+        className="mb-5 flex items-center gap-3 rounded-2xl border px-5 py-3"
+        style={{
+          background: "rgba(10,15,26,0.6)",
+          backdropFilter: "blur(16px)",
+          borderColor: "rgba(110,231,183,0.1)",
+          boxShadow: "0 0 20px rgba(110,231,183,0.05), inset 0 1px 0 rgba(255,255,255,0.03)",
+        }}
+      >
         <div className="flex items-center gap-2">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" style={{ animation: "pulseSlow 1.5s infinite" }} />
-          <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>REAL-TIME</span>
+          <span className="relative inline-block h-2.5 w-2.5">
+            <span className="absolute inset-0 rounded-full bg-green-500" />
+            <span className="absolute inset-0 rounded-full bg-green-500" style={{ animation: "ping 2s cubic-bezier(0,0,0.2,1) infinite" }} />
+          </span>
+          <span className="text-sm font-semibold text-aurora">REAL-TIME</span>
         </div>
         <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>
           40+ live counters updating every second · Last tick: {lastUpdate}
@@ -70,11 +80,15 @@ export default function OverviewTab() {
             <div className="mb-3 text-lg font-bold" style={{ color: "var(--text-primary)" }}>
               {stats[0]?.icon} {cat}
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="stagger-children grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {stats.map((stat) => {
                 const val = liveValues[stat.id] ?? stat.baseValue;
                 return (
-                  <div key={stat.id} className="card-glow rounded-2xl border p-4" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+                  <div
+                    key={stat.id}
+                    className="card-glow spotlight-card rounded-2xl border p-4"
+                    style={{ background: "var(--bg-card)", borderColor: "rgba(255,255,255,0.06)" }}
+                  >
                     <div className="mb-1 flex items-center gap-2">
                       <span className="text-lg">{stat.icon}</span>
                       <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-tertiary)" }}>

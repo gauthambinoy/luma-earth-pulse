@@ -86,24 +86,45 @@ export default function Sidebar({ currentTab, onSelectTab, isOpen, onToggle, the
         className={`fixed left-0 top-0 z-50 flex h-full flex-col border-r sidebar-transition lg:relative lg:z-auto ${
           isOpen ? "w-[280px]" : "w-0 overflow-hidden lg:w-[68px]"
         }`}
-        style={{ background: "var(--bg-sidebar)", borderColor: "var(--border)" }}
+        style={{
+          background: "rgba(10, 15, 26, 0.85)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderColor: "rgba(255,255,255,0.06)",
+          boxShadow: "4px 0 30px rgba(0,0,0,0.3), inset -1px 0 0 rgba(255,255,255,0.03)",
+        }}
       >
         {/* Logo */}
-        <div className="flex h-16 shrink-0 items-center gap-3 border-b px-5" style={{ borderColor: "var(--border)" }}>
+        <div
+          className="flex h-16 shrink-0 items-center gap-3 border-b px-5"
+          style={{ borderColor: "rgba(255,255,255,0.06)" }}
+        >
           {isOpen ? (
             <>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--accent-bg)" }}>
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl glow-pulse"
+                style={{
+                  background: "linear-gradient(135deg, rgba(110,231,183,0.15), rgba(34,211,238,0.1))",
+                  border: "1px solid rgba(110,231,183,0.2)",
+                }}
+              >
                 <span className="text-xl">🌍</span>
               </div>
               <div>
                 <div className="text-base font-bold tracking-tight">
-                  <span className="text-gradient">Unified</span>{" "}
-                  <span style={{ color: "var(--text-primary)" }}>World Data</span>
+                  <span className="text-aurora">Sapien</span>{" "}
+                  <span style={{ color: "var(--text-primary)" }}>Signal</span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--accent-bg)" }}>
+            <div
+              className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{
+                background: "linear-gradient(135deg, rgba(110,231,183,0.15), rgba(34,211,238,0.1))",
+                border: "1px solid rgba(110,231,183,0.2)",
+              }}
+            >
               <span className="text-xl">🌍</span>
             </div>
           )}
@@ -163,17 +184,24 @@ export default function Sidebar({ currentTab, onSelectTab, isOpen, onToggle, the
                         <button
                           key={tabId}
                           onClick={() => { onSelectTab(tabId); if (window.innerWidth < 1024) onToggle(); }}
-                          className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-all duration-200"
+                          className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-all duration-300"
                           style={{
-                            background: active ? "var(--accent-bg)" : "transparent",
+                            background: active
+                              ? "linear-gradient(135deg, rgba(110,231,183,0.12), rgba(34,211,238,0.06))"
+                              : "transparent",
                             color: active ? "var(--accent)" : "var(--text-secondary)",
+                            border: active ? "1px solid rgba(110,231,183,0.15)" : "1px solid transparent",
+                            boxShadow: active ? "0 0 15px rgba(110,231,183,0.08), inset 0 1px 0 rgba(255,255,255,0.04)" : "none",
                           }}
                           title={meta.label}
                         >
-                          <span className="text-lg">{meta.icon}</span>
+                          <span className={`text-lg transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-105"}`}>{meta.icon}</span>
                           {isOpen && <span className="truncate">{meta.label}</span>}
                           {active && isOpen && (
-                            <div className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />
+                            <div
+                              className="ml-auto h-2 w-2 rounded-full glow-pulse"
+                              style={{ background: "var(--accent)", boxShadow: "0 0 8px rgba(110,231,183,0.5)" }}
+                            />
                           )}
                         </button>
                       );
@@ -187,14 +215,20 @@ export default function Sidebar({ currentTab, onSelectTab, isOpen, onToggle, the
 
         {/* API Status */}
         {isOpen && (
-          <div className="shrink-0 border-t px-4 py-3" style={{ borderColor: "var(--border)" }}>
+          <div className="shrink-0 border-t px-4 py-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-[1px]" style={{ color: "var(--text-muted)" }}>
               API Status
             </div>
             <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              {API_ENDPOINTS.map((ep) => (
+              {API_ENDPOINTS.map((ep, i) => (
                 <div key={ep.name} className="flex items-center gap-1.5">
-                  <div className="h-[5px] w-[5px] rounded-full bg-emerald-500" />
+                  <div className="relative">
+                    <div className="h-[5px] w-[5px] rounded-full bg-emerald-500" />
+                    <div
+                      className="absolute inset-0 h-[5px] w-[5px] rounded-full bg-emerald-500"
+                      style={{ animation: `ping 2s cubic-bezier(0,0,0.2,1) ${i * 0.15}s infinite` }}
+                    />
+                  </div>
                   <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>{ep.name}</span>
                 </div>
               ))}
@@ -223,7 +257,7 @@ export default function Sidebar({ currentTab, onSelectTab, isOpen, onToggle, the
           )}
           {isOpen && (
             <a
-              href="https://github.com/gauthambinoy/unified-world-data"
+              href="https://github.com/gauthambinoy/luma-earth-pulse"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 flex items-center gap-1 text-[10px] transition hover:opacity-80"

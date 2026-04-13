@@ -176,29 +176,191 @@ input::placeholder { color: var(--text-muted); }
 
 /* Card with shadow depth */
 .card-glow {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(110,231,183,0.03) 0%, transparent 50%, rgba(96,165,250,0.03) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.card-glow:hover::before {
+  opacity: 1;
 }
 .card-glow:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
-  border-color: var(--border-hover) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(110,231,183,0.08);
+  transform: translateY(-4px);
+  border-color: rgba(110,231,183,0.2) !important;
 }
 
-.chart-panel {
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: var(--shadow-sm);
+/* Premium Aurora Card — enhanced version */
+.card-aurora {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
 }
-.chart-panel:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
+.card-aurora::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--aurora-angle, 0deg), #6EE7B7, #22D3EE, #60A5FA, #C4B5FD, #F472B6, #6EE7B7);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+  animation: rotateBorder 4s linear infinite;
+}
+.card-aurora::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--bg-card);
+  z-index: -1;
+}
+.card-aurora:hover::before {
+  opacity: 0.6;
+}
+.card-aurora:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px rgba(110,231,183,0.12), 0 0 60px rgba(96,165,250,0.06);
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #059669 0%, #3b82f6 50%, #8b5cf6 100%);
+@keyframes rotateBorder {
+  0% { --aurora-angle: 0deg; }
+  100% { --aurora-angle: 360deg; }
+}
+
+@property --aurora-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(10, 15, 26, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-heavy {
+  background: rgba(10, 15, 26, 0.75);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Aurora gradient text */
+.text-aurora {
+  background: linear-gradient(135deg, #6EE7B7, #22D3EE, #60A5FA, #C4B5FD);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: auroraTextShift 5s ease-in-out infinite;
+}
+@keyframes auroraTextShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Glow pulse for live indicators */
+.glow-pulse {
+  animation: glowPulseEffect 2s ease-in-out infinite;
+}
+@keyframes glowPulseEffect {
+  0%, 100% { box-shadow: 0 0 8px rgba(110,231,183,0.3); }
+  50% { box-shadow: 0 0 20px rgba(110,231,183,0.6), 0 0 40px rgba(110,231,183,0.2); }
+}
+
+/* Floating animation */
+.animate-float {
+  animation: floatEffect 4s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: floatEffect 6s ease-in-out infinite;
+}
+@keyframes floatEffect {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Mouse-tracking spotlight (applied via JS) */
+.spotlight-card {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    350px circle at var(--mouse-x) var(--mouse-y),
+    rgba(110,231,183,0.06),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-card:hover::after {
+  opacity: 1;
+}
+
+.chart-panel {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.chart-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(110,231,183,0.3), rgba(96,165,250,0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.chart-panel:hover {
+  border-color: rgba(110,231,183,0.15);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 15px rgba(110,231,183,0.06);
+  transform: translateY(-2px);
+}
+.chart-panel:hover::before {
+  opacity: 1;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #6EE7B7 0%, #22D3EE 30%, #60A5FA 60%, #C4B5FD 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: auroraTextShift 6s ease-in-out infinite;
 }
 
 button:active:not(:disabled) { transform: scale(0.97); }

@@ -11,7 +11,7 @@ import ErrorCard from "@/components/ui/ErrorCard";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
 
-const MeshBackground = dynamic(() => import("@/components/ui/MeshBackground"), { ssr: false });
+const MeshBackground = dynamic(() => import("@/components/ui/AuroraParticleBackground"), { ssr: false });
 
 import OverviewTab from "@/components/tabs/OverviewTab";
 import WeatherTab from "@/components/tabs/WeatherTab";
@@ -113,13 +113,26 @@ function DashboardInner() {
       />
 
       <main className="relative z-10 flex-1 overflow-hidden">
-        {/* Top bar — taller */}
-        <div className="flex h-16 items-center justify-between border-b px-8" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
+        {/* Premium floating header */}
+        <div
+          className="flex h-16 items-center justify-between border-b px-8"
+          style={{
+            borderColor: "rgba(255,255,255,0.06)",
+            background: "rgba(10, 15, 26, 0.7)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 -1px 0 rgba(255,255,255,0.03)",
+          }}
+        >
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:opacity-80"
-              style={{ color: "var(--text-secondary)", background: "var(--bg-secondary)" }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:scale-105"
+              style={{
+                color: "var(--text-secondary)",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
             >
               <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -131,14 +144,24 @@ function DashboardInner() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); }}
-              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition hover:opacity-80"
-              style={{ borderColor: "var(--border)", color: "var(--text-secondary)", background: "var(--bg-secondary)" }}
+              className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-all duration-300 hover:scale-[1.02]"
+              style={{
+                borderColor: "rgba(255,255,255,0.08)",
+                color: "var(--text-secondary)",
+                background: "rgba(255,255,255,0.04)",
+                backdropFilter: "blur(12px)",
+              }}
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Search
-              <kbd className="ml-1.5 rounded-md border px-1.5 py-0.5 font-mono text-[9px]" style={{ borderColor: "var(--border)", background: "var(--bg-tertiary)" }}>⌘K</kbd>
+              <kbd
+                className="ml-1.5 rounded-md border px-1.5 py-0.5 font-mono text-[9px]"
+                style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}
+              >
+                ⌘K
+              </kbd>
             </button>
           </div>
         </div>
@@ -148,10 +171,10 @@ function DashboardInner() {
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
             >
               <TabErrorBoundary tabName={tabLabel}>
                 <ActiveTab />
@@ -159,8 +182,11 @@ function DashboardInner() {
             </motion.div>
           </AnimatePresence>
 
-          <footer className="mt-10 border-t pb-6 pt-4 text-center text-[11px]" style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}>
-            Built with Next.js 14 · TypeScript · TailwindCSS · Recharts · SWR · Framer Motion · 200+ APIs
+          <footer
+            className="mt-10 border-t pb-6 pt-4 text-center text-[11px]"
+            style={{ borderColor: "rgba(255,255,255,0.04)", color: "var(--text-muted)" }}
+          >
+            <span className="text-aurora">Sapien Signal</span> — Built with Next.js 14 · TypeScript · TailwindCSS · CesiumJS · 200+ APIs
           </footer>
         </div>
       </main>
