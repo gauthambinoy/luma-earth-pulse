@@ -24,14 +24,14 @@ export async function GET() {
       }),
     ]);
 
-    let coins = [];
+    let coins: unknown[] = [];
     if (marketsRes.status === "fulfilled") {
       const raw = marketsRes.value;
       const parsed = CryptoMarketSchema.array().safeParse(raw);
       coins = parsed.success ? parsed.data : [];
     }
 
-    let trending = [];
+    let trending: unknown[] = [];
     if (trendingRes.status === "fulfilled" && trendingRes.value.ok) {
       const d = await trendingRes.value.json();
       trending = d.coins ?? [];
