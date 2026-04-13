@@ -20,6 +20,7 @@ const TAB_GROUPS = [
   { label: "Dashboard", tabs: ["overview"] as TabId[] },
   { label: "Global Data", tabs: ["weather", "quakes", "air"] as TabId[] },
   { label: "Finance", tabs: ["markets", "forex", "economy"] as TabId[] },
+  { label: "Energy & Climate", tabs: ["energy"] as TabId[] },
   { label: "Society", tabs: ["health", "countries"] as TabId[] },
   { label: "Science & Tech", tabs: ["space", "tech"] as TabId[] },
   { label: "Information", tabs: ["news", "datasources"] as TabId[] },
@@ -35,6 +36,7 @@ const API_ENDPOINTS = [
   { name: "Countries", status: "ok" as const },
   { name: "Space/ISS", status: "ok" as const },
   { name: "Air Quality", status: "ok" as const },
+  { name: "Energy", status: "ok" as const },
   { name: "GitHub", status: "ok" as const },
   { name: "HackerNews", status: "ok" as const },
 ];

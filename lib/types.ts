@@ -252,3 +252,44 @@ export interface ApiError {
   error: string;
   status: number;
 }
+
+// ── Energy ──
+export interface EnergyCountry {
+  code: string;
+  name: string;
+  flag: string;
+  annualTWh: number;
+  consumedTWh: number;
+  perCapitaMWh: number;
+  mwhPerSecond: number;
+  mix: {
+    fossil: number;
+    nuclear: number;
+    renewable: number;
+  };
+  population: number;
+}
+
+export interface EnergySource {
+  name: string;
+  share: number;
+  annualTWh: number;
+  color: string;
+  icon: string;
+}
+
+export interface EnergyGlobal {
+  totalAnnualTWh: number;
+  consumedTWh: number;
+  mwhPerSecond: number;
+  renewableShare: number;
+  fossilShare: number;
+  nuclearShare: number;
+}
+
+export interface EnergyResponse {
+  global: EnergyGlobal;
+  countries: EnergyCountry[];
+  sources: EnergySource[];
+  timestamp: number;
+}

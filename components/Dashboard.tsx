@@ -19,6 +19,7 @@ import EarthquakeTab from "@/components/tabs/EarthquakeTab";
 import MarketsTab from "@/components/tabs/MarketsTab";
 import ForexTab from "@/components/tabs/ForexTab";
 import EconomyTab from "@/components/tabs/EconomyTab";
+import EnergyTab from "@/components/tabs/EnergyTab";
 import HealthTab from "@/components/tabs/HealthTab";
 import CountriesTab from "@/components/tabs/CountriesTab";
 import SpaceTab from "@/components/tabs/SpaceTab";
@@ -49,7 +50,7 @@ class TabErrorBoundary extends Component<
 
 const TAB_COMPONENTS: Record<TabId, React.FC> = {
   overview: OverviewTab, weather: WeatherTab, quakes: EarthquakeTab, markets: MarketsTab,
-  forex: ForexTab, economy: EconomyTab, health: HealthTab, countries: CountriesTab,
+  forex: ForexTab, economy: EconomyTab, energy: EnergyTab, health: HealthTab, countries: CountriesTab,
   space: SpaceTab, air: AirQualityTab, tech: TechPulseTab, news: NewsTab,
   datasources: DataSourcesTab, ai: AIQueryTab, system: SystemTab,
 };

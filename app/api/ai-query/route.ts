@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+// Input validation schema
+const QueryInputSchema = z.object({
+  query: z.string().min(1, "Query is required").max(500, "Query too long (max 500 chars)").trim(),
+});
 
 // Smart data query without requiring an AI API key
 // Parses natural language patterns and maps to data sources
@@ -85,16 +91,27 @@ const QUERY_PATTERNS: { pattern: RegExp; response: (match: RegExpMatchArray) => 
       suggestion: "Go to Forex tab → Click any currency button to see its historical chart.",
     }),
   },
+  {
+    pattern: /(?:energy|electricity|power|consumption|renewable|solar|wind|nuclear|fossil|coal|oil|gas)\s*(?:consumption|usage|data|mix|global|world)?/i,
+    response: () => ({
+      answer: "The Energy tab shows real-time global energy consumption with live counters updating every second. It includes per-country consumption for the top 10 energy consumers (China, USA, India, etc.), energy mix by source (coal, gas, nuclear, hydro, wind, solar), renewable vs fossil breakdowns, and per-capita statistics. The global energy consumption is ~29,165 TWh annually (~924,147 MWh every second).",
+      source: "IEA World Energy Outlook + EIA + IRENA + BP Statistical Review",
+      suggestion: "Go to Energy tab → Watch real-time consumption counters for each country ticking every second.",
+    }),
+  },
 ];
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const query = (body.query || "").trim();
+    const parsed = QueryInputSchema.safeParse(body);
 
-    if (!query) {
-      return NextResponse.json({ error: "Query is required", status: 400 }, { status: 400 });
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message || "Invalid query";
+      return NextResponse.json({ error: msg, status: 400 }, { status: 400 });
     }
+
+    const query = parsed.data.query;
 
     // Try pattern matching first (works without any API key)
     for (const { pattern, response } of QUERY_PATTERNS) {
