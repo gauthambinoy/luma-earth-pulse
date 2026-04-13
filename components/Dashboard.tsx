@@ -10,8 +10,12 @@ import { TABS, type TabId } from "@/lib/constants";
 import ErrorCard from "@/components/ui/ErrorCard";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
 import { useTheme } from "@/hooks/useTheme";
+import { useAmbientLight } from "@/hooks/useAmbientLight";
+import { useGlobalParallax } from "@/hooks/useInteractions";
+import { AnomalyContainer, useAnomalyDetection } from "@/components/ai/AIFeatures";
 
 const MeshBackground = dynamic(() => import("@/components/ui/AuroraParticleBackground"), { ssr: false });
+const AIChatSidebar = dynamic(() => import("@/components/ui/AIChatSidebar"), { ssr: false });
 
 import OverviewTab from "@/components/tabs/OverviewTab";
 import WeatherTab from "@/components/tabs/WeatherTab";
@@ -59,6 +63,11 @@ function DashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggle: toggleTheme, mounted: themeMounted } = useTheme();
+  const ambient = useAmbientLight();
+  useGlobalParallax();
+
+  // Anomaly detection with sample data
+  const { anomalies, dismiss: dismissAnomaly } = useAnomalyDetection({});
 
   const tabParam = searchParams.get("tab") as TabId | null;
   const validTab = TABS.some((t) => t.id === tabParam) ? tabParam! : "overview";
@@ -103,6 +112,9 @@ function DashboardInner() {
     <div className="relative flex min-h-screen" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <MeshBackground />
 
+      {/* Anomaly detection alerts */}
+      <AnomalyContainer anomalies={anomalies} onDismiss={dismissAnomaly} />
+
       <Sidebar
         currentTab={tab}
         onSelectTab={handleTabChange}
@@ -113,7 +125,7 @@ function DashboardInner() {
       />
 
       <main className="relative z-10 flex-1 overflow-hidden">
-        {/* Premium floating header */}
+        {/* Premium floating header with ambient light */}
         <div
           className="flex h-16 items-center justify-between border-b px-8"
           style={{
@@ -121,7 +133,7 @@ function DashboardInner() {
             background: "rgba(10, 15, 26, 0.7)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.2), inset 0 -1px 0 rgba(255,255,255,0.03)",
+            boxShadow: `0 4px 24px rgba(0,0,0,0.2), inset 0 -1px 0 rgba(255,255,255,0.03), 0 0 40px ${ambient.accentGlow}`,
           }}
         >
           <div className="flex items-center gap-4">
@@ -138,10 +150,30 @@ function DashboardInner() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             </button>
-            <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>{tabLabel}</h2>
+            <div>
+              <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>{tabLabel}</h2>
+              <div className="flex items-center gap-2 text-[9px]" style={{ color: "var(--text-muted)" }}>
+                <div className="h-1 w-1 rounded-full" style={{ background: ambient.accent, boxShadow: `0 0 6px ${ambient.accent}` }} />
+                <span className="capitalize">{ambient.phase} mode</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Voice command button */}
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:scale-105"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                color: "var(--text-secondary)",
+              }}
+              title="AI Chat (⌘J)"
+              onClick={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "j", metaKey: true })); }}
+            >
+              <span className="text-sm">🧠</span>
+            </button>
+
             <button
               onClick={() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); }}
               className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-all duration-300 hover:scale-[1.02]"
@@ -166,15 +198,15 @@ function DashboardInner() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content with liquid glass transitions */}
         <div className="h-[calc(100vh-64px)] overflow-y-auto px-8 py-6" style={{ background: "var(--bg-primary)" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
-              initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              initial={{ opacity: 0, y: 12, filter: "blur(6px)", scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
+              exit={{ opacity: 0, y: -8, filter: "blur(4px)", scale: 0.99 }}
+              transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
             >
               <TabErrorBoundary tabName={tabLabel}>
                 <ActiveTab />
@@ -186,12 +218,13 @@ function DashboardInner() {
             className="mt-10 border-t pb-6 pt-4 text-center text-[11px]"
             style={{ borderColor: "rgba(255,255,255,0.04)", color: "var(--text-muted)" }}
           >
-            <span className="text-aurora">Sapien Signal</span> — Built with Next.js 14 · TypeScript · TailwindCSS · CesiumJS · 200+ APIs
+            <span className="text-aurora">Sapien Signal</span> — Built with Next.js 14 · TypeScript · TailwindCSS · CesiumJS · 200+ APIs · AI Intelligence
           </footer>
         </div>
       </main>
 
       <CommandPalette onSelectTab={handleTabChange} currentTab={tab} />
+      <AIChatSidebar />
     </div>
   );
 }
