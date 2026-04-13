@@ -36,6 +36,9 @@ function Earth() {
   const cloudsRef = useRef<THREE.Mesh>(null);
   const nightRef = useRef<THREE.Mesh>(null);
 
+  /* Textures sourced from public-domain NASA imagery via the three-globe
+     project (https://github.com/vasturiano/three-globe).
+     Located in /public/textures/ — equirectangular projection, any resolution. */
   const [dayMap, bumpMap, specMap, nightMap, cloudMap] = useLoader(
     THREE.TextureLoader,
     [
