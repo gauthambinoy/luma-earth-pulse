@@ -50,7 +50,14 @@ export const LIVE_STATS: LiveStat[] = [
   // ── Energy ──
   { id: "energy_consumed", label: "Energy Consumed (MWh, Year)", category: "Energy", icon: "⚡", baseValue: 0, perSecond: 176431000000 / SECS_PER_YEAR, unit: "MWh", source: "IEA", color: "#eab308", direction: "up" },
   { id: "solar_installed", label: "Solar Energy Generated (MWh, Year)", category: "Energy", icon: "☀️", baseValue: 0, perSecond: 4600000000 / SECS_PER_YEAR, unit: "MWh", source: "IRENA", color: "#f59e0b", direction: "up" },
+  { id: "wind_energy", label: "Wind Energy Generated (MWh, Year)", category: "Energy", icon: "💨", baseValue: 0, perSecond: 2100000000 / SECS_PER_YEAR, unit: "MWh", source: "IRENA", color: "#38bdf8", direction: "up" },
+  { id: "nuclear_energy", label: "Nuclear Energy Generated (MWh, Year)", category: "Energy", icon: "☢️", baseValue: 0, perSecond: 2800000000 / SECS_PER_YEAR, unit: "MWh", source: "IAEA", color: "#a78bfa", direction: "up" },
+  { id: "coal_consumed", label: "Coal Consumed (tons, Year)", category: "Energy", icon: "🪨", baseValue: 0, perSecond: 8300000000 / SECS_PER_YEAR, unit: "t", source: "IEA", color: "#57534e", direction: "up" },
+  { id: "natural_gas", label: "Natural Gas Consumed (m³, Year)", category: "Energy", icon: "🔥", baseValue: 0, perSecond: 4000000000000 / SECS_PER_YEAR, unit: "m³", source: "IEA", color: "#fb923c", direction: "up" },
   { id: "oil_consumed", label: "Oil Consumed (barrels, Today)", category: "Energy", icon: "🛢", baseValue: 0, perSecond: 100000000 / 86400, unit: "bbl", source: "EIA", color: "#44403c", direction: "up" },
+  { id: "hydro_energy", label: "Hydropower Generated (MWh, Year)", category: "Energy", icon: "🌊", baseValue: 0, perSecond: 4300000000 / SECS_PER_YEAR, unit: "MWh", source: "IRENA", color: "#0ea5e9", direction: "up" },
+  { id: "electricity_cost", label: "Global Electricity Spend ($, Year)", category: "Energy", icon: "💡", baseValue: 0, perSecond: 2800000000000 / SECS_PER_YEAR, unit: "$", source: "IEA", color: "#fbbf24", direction: "up" },
+  { id: "ev_charge_sessions", label: "EV Charge Sessions (Today)", category: "Energy", icon: "🔌", baseValue: 0, perSecond: 15000000 / 86400, unit: "", source: "IEA GEVO", color: "#22c55e", direction: "up" },
 
   // ── Economy ──
   { id: "world_gdp", label: "World GDP (USD, Year)", category: "Economy", icon: "💰", baseValue: 0, perSecond: 105000000000000 / SECS_PER_YEAR, unit: "$", source: "World Bank", color: "#10b981", direction: "up" },
