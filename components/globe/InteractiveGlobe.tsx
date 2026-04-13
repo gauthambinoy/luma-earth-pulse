@@ -74,6 +74,15 @@ function latLonToVec3(lat: number, lon: number, radius: number = EARTH_RADIUS): 
   );
 }
 
+// Deterministic seeded PRNG (park-miller LCG)
+function createSeededRandom(initialSeed: number) {
+  let seed = initialSeed;
+  return () => {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+}
+
 // ════════════════════════════════════════════
 // PROCEDURAL TEXTURES (no external images)
 // ════════════════════════════════════════════
@@ -117,12 +126,7 @@ function generateEarthTexture(size: number = 2048): THREE.CanvasTexture {
     { cx: 0.5, cy: 0.06, rx: 0.2, ry: 0.04, color: "#d8e8e8", rotation: 0 },
   ];
 
-  // Use a seed-like approach for deterministic randomness
-  let seed = 42;
-  const seededRandom = () => {
-    seed = (seed * 16807 + 0) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
+  const seededRandom = createSeededRandom(42);
 
   for (const c of continents) {
     ctx.save();
@@ -178,11 +182,7 @@ function generateCloudTexture(size: number = 1024): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d")!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  let seed = 99;
-  const seededRandom = () => {
-    seed = (seed * 16807 + 0) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
+  const seededRandom = createSeededRandom(99);
 
   for (let i = 0; i < 800; i++) {
     const x = seededRandom() * canvas.width;
@@ -230,11 +230,7 @@ function generateBumpTexture(size: number = 1024): THREE.CanvasTexture {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  let seed = 7;
-  const seededRandom = () => {
-    seed = (seed * 16807 + 0) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
+  const seededRandom = createSeededRandom(7);
 
   for (let i = 0; i < 5000; i++) {
     const x = seededRandom() * canvas.width;
@@ -258,11 +254,7 @@ function generateNightLightsTexture(size: number = 2048): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d")!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  let seed = 55;
-  const seededRandom = () => {
-    seed = (seed * 16807 + 0) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
+  const seededRandom = createSeededRandom(55);
 
   const lightClusters = [
     { cx: 0.2, cy: 0.32, spread: 0.06, density: 80 },
