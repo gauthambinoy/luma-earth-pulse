@@ -11,7 +11,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['lib/**', 'app/api/**'],
+      include: ['lib/**', 'app/api/**', 'components/**', 'hooks/**'],
     },
   },
   resolve: {
