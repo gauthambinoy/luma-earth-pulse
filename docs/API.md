@@ -1,4 +1,4 @@
-# API Reference — Unified World Data
+# API Reference — Sapien Signal
 
 All routes are Next.js App Router handlers under `/app/api/`. They are internal to the application — the client calls them via SWR hooks; they are not a public API.
 

@@ -278,7 +278,7 @@ describe('GitHubRepoSchema', () => {
 describe('HNStorySchema', () => {
   const validStory = {
     id: 38000000,
-    title: 'Show HN: Unified World Data Dashboard',
+    title: 'Show HN: Sapien Signal Dashboard',
     url: 'https://example.com',
     score: 342,
     by: 'gauthambinoy',

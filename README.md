@@ -1,11 +1,18 @@
-# 🌍 Luma Earth Pulse — Live Global Dashboard
+<div align="center">
 
-**Real-time global data dashboard aggregating 200+ public APIs — weather, earthquakes, crypto, forex, economy, health, energy, countries, space, ISS tracker, air quality, tech pulse, and news — all in one beautiful, blazing-fast interface.**
+# 🌍 Sapien Signal
 
+### _The Pulse of Human Civilization — In Real Time_
+
+**200+ free APIs · 15 interactive tabs · 3D WebGL Earth · Live data streams**
+
+[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-Sapien_Signal-00d4ff?style=for-the-badge&logo=vercel&logoColor=white)](https://unified-world-data.vercel.app)
 [![CI](https://github.com/gauthambinoy/luma-earth-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/gauthambinoy/luma-earth-pulse/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js_14-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Tailwind](https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+
+</div>
 
 ---
 
@@ -104,7 +111,7 @@ Open [http://localhost:3000](http://localhost:3000) — the dashboard loads inst
 ## 📂 Project Structure
 
 ```
-luma-earth-pulse/
+sapien-signal/
 ├── app/                    # Next.js App Router
 │   ├── layout.tsx          # Root layout + metadata
 │   ├── page.tsx            # Home (Dashboard)
@@ -162,8 +169,8 @@ npm run test:coverage     # Coverage report
 ## 🐳 Docker
 
 ```bash
-docker build -t luma-earth-pulse .
-docker run -p 3000:3000 luma-earth-pulse
+docker build -t sapien-signal .
+docker run -p 3000:3000 sapien-signal
 ```
 
 ---
@@ -179,3 +186,13 @@ docker run -p 3000:3000 luma-earth-pulse
 ## 📄 License
 
 MIT © 2026 [Gautham Binoy](https://github.com/gauthambinoy)
+
+---
+
+<div align="center">
+
+_"Every signal tells a story. This dashboard tells them all."_
+
+**Built with obsession by [Gautham Binoy](https://github.com/gauthambinoy)**
+
+</div>

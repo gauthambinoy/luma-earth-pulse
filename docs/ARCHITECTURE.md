@@ -1,8 +1,8 @@
-# Architecture — Unified World Data
+# Architecture — Sapien Signal
 
 ## Overview
 
-Unified World Data is a Next.js 14 (App Router) full-stack application. The browser never touches an external API directly — all third-party calls are made from Next.js API routes on the server, keeping API keys out of the client bundle and enabling server-side caching via `next: { revalidate }`.
+Sapien Signal is a Next.js 14 (App Router) full-stack application. The browser never touches an external API directly — all third-party calls are made from Next.js API routes on the server, keeping API keys out of the client bundle and enabling server-side caching via `next: { revalidate }`.
 
 ```
 Browser

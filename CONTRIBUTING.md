@@ -1,4 +1,4 @@
-# Contributing to Unified World Data
+# Contributing to Sapien Signal
 
 ## Getting Started
 
