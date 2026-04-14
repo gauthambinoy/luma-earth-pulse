@@ -118,11 +118,13 @@ function DashboardInner() {
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
-          opacity: 0.2,
+          opacity: 0.32,
         }}
       />
       <div className="pointer-events-none fixed inset-0 z-0" style={{ background: "radial-gradient(ellipse 90% 80% at 50% 40%, transparent 0%, #030810 75%)" }} />
-      <MeshBackground />
+      <div style={{ opacity: tab === "overview" ? 0.22 : 0.55 }}>
+        <MeshBackground />
+      </div>
 
       {/* Anomaly detection alerts */}
       <AnomalyContainer anomalies={anomalies} onDismiss={dismissAnomaly} />

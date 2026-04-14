@@ -118,82 +118,151 @@ export default function OverviewTab() {
 
   return (
     <div className="space-y-6">
-      {/* REAL-TIME STATUS BAR */}
-      <GlassPanel glow="rgba(110,231,183,0.04)">
-        <div className="flex flex-wrap items-center gap-4 px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 8px rgba(52,211,153,0.6)" }} />
-            </span>
-            <span className="text-xs font-bold tracking-widest" style={{ color: "#6EE7B7" }}>REAL-TIME</span>
-          </div>
-          <div className="h-4 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-          <span className="text-xs text-white/40">
-            80+ live counters across universe, atmosphere, geology, biology &middot; <span className="text-white/60">{lastUpdate}</span>
-          </span>
-          <span className="ml-auto hidden text-[11px] text-white/25 lg:block">
-            Weather 5m &middot; Quakes 2m &middot; Crypto 1m &middot; Cosmic 1s
-          </span>
-        </div>
-      </GlassPanel>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div
+          className="relative overflow-hidden rounded-[28px] border"
+          style={{
+            background: "rgba(7,12,24,0.72)",
+            borderColor: "rgba(255,255,255,0.08)",
+            boxShadow: "0 25px 80px rgba(0,0,0,0.34)",
+          }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "url(https://eoimages.gsfc.nasa.gov/images/imagerecords/79000/79765/dnb_land_ocean_ice.2012.3600x1800.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.32,
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 72% 26%, rgba(34,211,238,0.18) 0%, transparent 22%), linear-gradient(120deg, rgba(2,6,23,0.16) 0%, rgba(2,6,23,0.72) 48%, rgba(2,6,23,0.94) 100%)",
+            }}
+          />
 
-      {/* AI BRIEFING + ENERGY COUNTER */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <GlassPanel className="lg:col-span-2" glow="rgba(96,165,250,0.04)">
+          <div className="relative grid gap-6 p-6 lg:grid-cols-[1.08fr_0.92fr] lg:p-8">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold tracking-[0.22em]" style={{ background: "rgba(110,231,183,0.08)", border: "1px solid rgba(110,231,183,0.16)", color: "#6EE7B7" }}>
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                  ORBITAL COMMAND VIEW
+                </div>
+                <span className="text-xs text-white/45">Last sync {lastUpdate || "--:--:--"}</span>
+              </div>
+
+              <h2 className="max-w-3xl text-3xl font-black leading-tight text-white md:text-5xl">
+                Satellite-first dashboard with the map and planetary feeds above the fold.
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/58 md:text-base">
+                Live monitoring across weather, quakes, energy, space and markets, re-framed as a darker orbital control room so the dashboard no longer feels like the older glass-card layout.
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                {[
+                  `${weather?.length ?? 0} weather streams`,
+                  `${quakes?.length ?? 0} seismic events`,
+                  `${markets?.length ?? 0} markets tracked`,
+                  "80+ live counters",
+                ].map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/70"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Global Energy YTD", value: fmt(globalMwh), sub: "MWh", color: "#facc15" },
+                { label: "Earth Rotation Today", value: fmt(liveValues["earth_rotation_km"] || 0), sub: "km", color: "#22d3ee" },
+                { label: "Lightning Today", value: fmt(liveValues["lightning_strikes"] || 0), sub: "strikes", color: "#fb7185" },
+                { label: "Crypto Market Cap", value: ml ? "..." : fmtUsd(totalCap), sub: "live", color: "#a78bfa" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl p-4"
+                  style={{
+                    background: "rgba(255,255,255,0.045)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    backdropFilter: "blur(20px)",
+                  }}
+                >
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/38">{item.label}</div>
+                  <div className="mt-3 font-mono text-2xl font-black leading-none" style={{ color: item.color, textShadow: `0 0 22px ${item.color}33` }}>
+                    {item.value}
+                  </div>
+                  <div className="mt-2 text-[11px] text-white/28">{item.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.6 }}>
+          <SectionHead icon={"\u{1F5FA}\u{FE0F}"} title="Live Satellite Intelligence Map" sub="Zoom and pan like a real map · Switch data layers · Click markers for details" />
+          <InteractiveMap />
+        </motion.div>
+
+        <GlassPanel glow="rgba(96,165,250,0.06)">
           <div className="relative p-5">
             <div className="absolute right-5 top-4 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider" style={{ background: "rgba(96,165,250,0.1)", color: "#60A5FA", border: "1px solid rgba(96,165,250,0.15)" }}>
-              AI INSIGHT
+              AI BRIEFING
             </div>
             <div className="mb-3 flex items-center gap-2">
               <span className="text-base">{"\u{1F916}"}</span>
-              <span className="text-sm font-bold text-white/90">Universal Intelligence Briefing</span>
+              <span className="text-sm font-bold text-white/90">Universal Situation Report</span>
             </div>
-            <p className="max-w-2xl text-sm leading-relaxed text-white/50">
-              {!ql && quakes && quakes.length > 0
-                ? `${quakes.length} seismic events in the last 30 days. `
-                : "Loading seismic data... "}
-              {!ml && markets && markets.length > 0
-                ? `Crypto market cap: ${fmtUsd(totalCap)}. `
-                : ""}
-              {!wl && weather
-                ? `${weather.length} weather stations streaming. `
-                : ""}
-              Earth has rotated <span className="font-mono font-bold" style={{ color: "#22d3ee" }}>{fmt(liveValues["earth_rotation_km"] || 0)} km</span> today.
-              {" "}Global energy at <span className="font-mono font-bold" style={{ color: "#eab308" }}>{fmt(globalMwh)} MWh</span> YTD.
-              {" "}<span className="font-mono font-bold" style={{ color: "#fbbf24" }}>{fmt(liveValues["lightning_strikes"] || 0)}</span> lightning strikes today.
-              {" "}All systems nominal.
+            <p className="text-sm leading-relaxed text-white/50">
+              {!ql && quakes && quakes.length > 0 ? `${quakes.length} seismic events in the last 30 days. ` : "Loading seismic data... "}
+              {!ml && markets && markets.length > 0 ? `Crypto market cap: ${fmtUsd(totalCap)}. ` : ""}
+              {!wl && weather ? `${weather.length} weather stations streaming. ` : ""}
+              Earth has rotated <span className="font-mono font-bold" style={{ color: "#22d3ee" }}>{fmt(liveValues["earth_rotation_km"] || 0)} km</span> today and global energy has reached{" "}
+              <span className="font-mono font-bold" style={{ color: "#eab308" }}>{fmt(globalMwh)} MWh</span> year-to-date.
             </p>
-          </div>
-        </GlassPanel>
 
-        <GlassPanel glow="rgba(234,179,8,0.06)">
-          <div className="flex h-full flex-col justify-center p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-lg">{"\u26A1"}</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Global Energy YTD</span>
-            </div>
-            <div className="font-mono text-3xl font-black tabular-nums" style={{ color: "#eab308", textShadow: "0 0 25px rgba(234,179,8,0.25)" }}>
-              {fmt(globalMwh)}
-            </div>
-            <div className="mt-1 text-[11px] text-white/30">MWh consumed &middot; 924K MW/sec</div>
-            <div className="mt-3">
+            <div className="mt-5">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-lg">{"\u26A1"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Global Energy Mix</span>
+              </div>
               <EnergyMiniBar fossil={62} renewable={28} nuclear={10} />
-              <div className="mt-1.5 flex justify-between text-[9px] text-white/25">
+              <div className="mt-2 flex justify-between text-[10px] text-white/28">
                 <span>{"\u{1F534}"} Fossil 62%</span>
-                <span>{"\u{1F7E2}"} Renew 28%</span>
+                <span>{"\u{1F7E2}"} Renewable 28%</span>
                 <span>{"\u{1F535}"} Nuclear 10%</span>
               </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              {[
+                { label: "Cosmic tick", value: "1s cadence" },
+                { label: "Weather sync", value: "5 min" },
+                { label: "Seismic sync", value: "2 min" },
+                { label: "Markets sync", value: "1 min" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl px-3 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/32">{item.label}</div>
+                  <div className="mt-1 text-sm font-semibold text-white/80">{item.value}</div>
+                </div>
+              ))}
             </div>
           </div>
         </GlassPanel>
       </div>
-
-      {/* INTERACTIVE GLOBAL MAP */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
-        <SectionHead icon={"\u{1F5FA}\u{FE0F}"} title="Global Intelligence Map" sub="Zoom in/out like Google Maps \u00B7 Switch data layers \u00B7 Click markers for details" />
-        <InteractiveMap />
-      </motion.div>
 
       {/* ENERGY CONSUMPTION BY REGION */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}>
