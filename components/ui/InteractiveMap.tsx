@@ -104,9 +104,16 @@ export default function InteractiveMap() {
         worldCopyJump: true,
       });
 
-      // Dark satellite tiles (CartoDB dark matter for that space feel)
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      // Real satellite imagery (ESRI World Imagery — actual satellite photos like Google Maps)
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         maxZoom: 19,
+        attribution: "ESRI",
+      }).addTo(map);
+
+      // Labels overlay on top of satellite (country/city names)
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+        pane: "overlayPane",
       }).addTo(map);
 
       // Custom zoom control position
@@ -219,7 +226,7 @@ export default function InteractiveMap() {
       </div>
 
       {/* Map */}
-      <div ref={mapRef} style={{ height: 420, width: "100%" }} />
+      <div ref={mapRef} style={{ height: 520, width: "100%" }} />
 
       {/* Bottom stats bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
