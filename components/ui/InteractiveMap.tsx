@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 
-/* Real-time data points for the map */
 const DATA_LAYERS = {
   energy: {
     label: "Energy Consumption",
@@ -78,110 +76,135 @@ const DATA_LAYERS = {
 
 type LayerKey = keyof typeof DATA_LAYERS;
 
+const FLY_TO_PRESETS: Array<{ label: string; center: [number, number]; zoom: number }> = [
+  { label: "World", center: [20, 10], zoom: 2.25 },
+  { label: "US East", center: [40.7, -74.0], zoom: 7 },
+  { label: "Europe", center: [48.85, 2.35], zoom: 6.25 },
+  { label: "Middle East", center: [25.2, 55.3], zoom: 7.5 },
+  { label: "Tokyo", center: [35.68, 139.69], zoom: 9 },
+];
+
 export default function InteractiveMap() {
+  const shellRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [activeLayer, setActiveLayer] = useState<LayerKey>("energy");
-  const [zoom, setZoom] = useState(2);
-  const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [zoom, setZoom] = useState(2.25);
   const [mounted, setMounted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
+    let cleanupMap: (() => void) | undefined;
+
     const init = async () => {
       const L = (await import("leaflet")).default;
-
-      // Dark satellite tile layer
       const map = L.map(mapRef.current!, {
         center: [20, 10],
-        zoom: 2,
+        zoom: 2.25,
         minZoom: 2,
-        maxZoom: 18,
+        maxZoom: 20,
+        zoomSnap: 0.25,
+        zoomDelta: 0.5,
         zoomControl: false,
         attributionControl: false,
         worldCopyJump: true,
+        preferCanvas: true,
       });
 
-      // Real satellite imagery (ESRI World Imagery — actual satellite photos like Google Maps)
+      map.createPane("labels");
+      const labelsPane = map.getPane("labels");
+      if (labelsPane) {
+        labelsPane.style.zIndex = "650";
+        labelsPane.style.pointerEvents = "none";
+      }
+
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-        maxZoom: 19,
-        attribution: "ESRI",
+        maxZoom: 20,
+        maxNativeZoom: 19,
+        detectRetina: true,
+        attribution: "ESRI World Imagery",
       }).addTo(map);
 
-      // Labels overlay on top of satellite (country/city names)
       L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        pane: "overlayPane",
+        maxZoom: 20,
+        maxNativeZoom: 19,
+        detectRetina: true,
+        pane: "labels",
       }).addTo(map);
 
-      // Custom zoom control position
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      map.on("zoomend", () => setZoom(map.getZoom()));
+      const updateZoom = () => setZoom(Number(map.getZoom().toFixed(2)));
+      map.on("zoomend", updateZoom);
+      map.on("moveend", updateZoom);
+      updateZoom();
+
+      const handleFullscreen = () => {
+        const active = document.fullscreenElement === shellRef.current;
+        setIsFullscreen(active);
+        window.setTimeout(() => map.invalidateSize(), 180);
+      };
+
+      document.addEventListener("fullscreenchange", handleFullscreen);
 
       mapInstanceRef.current = map;
       setMounted(true);
+
+      cleanupMap = () => {
+        document.removeEventListener("fullscreenchange", handleFullscreen);
+        map.remove();
+        mapInstanceRef.current = null;
+      };
     };
 
     init();
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      cleanupMap?.();
     };
   }, []);
 
-  // Update markers when layer changes
   useEffect(() => {
     if (!mapInstanceRef.current || !mounted) return;
 
     const loadMarkers = async () => {
       const L = (await import("leaflet")).default;
       const map = mapInstanceRef.current;
-
-      // Remove old markers
-      markersRef.current.forEach((m) => m.remove());
+      markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
 
       const layer = DATA_LAYERS[activeLayer];
-
-      layer.points.forEach((pt) => {
-        const pulseSize = pt.size;
+      layer.points.forEach((point) => {
+        const pulseSize = point.size;
         const icon = L.divIcon({
           className: "custom-map-marker",
           html: `
             <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;">
-              <div style="position:absolute;inset:0;border-radius:50%;background:${layer.color};opacity:0.15;animation:mapPulse 2s ease-in-out infinite;"></div>
-              <div style="position:absolute;inset:${pulseSize * 0.25}px;border-radius:50%;background:${layer.color};opacity:0.4;box-shadow:0 0 ${pulseSize}px ${layer.color}88;"></div>
-              <div style="position:absolute;inset:${pulseSize * 0.35}px;border-radius:50%;background:${layer.color};box-shadow:0 0 8px ${layer.color};"></div>
+              <div style="position:absolute;inset:0;border-radius:50%;background:${layer.color};opacity:0.14;animation:mapPulse 2s ease-in-out infinite;"></div>
+              <div style="position:absolute;inset:${pulseSize * 0.22}px;border-radius:50%;background:${layer.color};opacity:0.38;box-shadow:0 0 ${pulseSize}px ${layer.color}88;"></div>
+              <div style="position:absolute;inset:${pulseSize * 0.34}px;border-radius:50%;background:${layer.color};box-shadow:0 0 10px ${layer.color};"></div>
             </div>
           `,
           iconSize: [pulseSize, pulseSize],
           iconAnchor: [pulseSize / 2, pulseSize / 2],
         });
 
-        const marker = L.marker([pt.lat, pt.lng], { icon }).addTo(map);
-
+        const marker = L.marker([point.lat, point.lng], { icon }).addTo(map);
         marker.bindPopup(
           `<div style="background:#0f1629;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px;min-width:180px;font-family:Inter,sans-serif;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
               <span style="font-size:14px;">${layer.icon}</span>
-              <span style="font-size:13px;font-weight:700;color:#f1f5f9;">${pt.label}</span>
+              <span style="font-size:13px;font-weight:700;color:#f1f5f9;">${point.label}</span>
             </div>
-            <div style="font-size:20px;font-weight:800;color:${layer.color};text-shadow:0 0 15px ${layer.color}44;margin-bottom:4px;">${pt.value}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);">${pt.detail}</div>
-            ${(pt as any).perCapita ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.35);">Per capita: <span style="color:${layer.color};font-weight:600;">${(pt as any).perCapita}</span></div>` : ""}
+            <div style="font-size:20px;font-weight:800;color:${layer.color};text-shadow:0 0 15px ${layer.color}44;margin-bottom:4px;">${point.value}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);">${point.detail}</div>
+            ${"perCapita" in point ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.35);">Per capita: <span style="color:${layer.color};font-weight:600;">${point.perCapita}</span></div>` : ""}
           </div>`,
-          {
-            className: "glass-popup",
-            closeButton: false,
-          }
+          { className: "glass-popup", closeButton: false }
         );
-
         markersRef.current.push(marker);
       });
     };
@@ -189,24 +212,76 @@ export default function InteractiveMap() {
     loadMarkers();
   }, [activeLayer, mounted]);
 
-  const layers = Object.entries(DATA_LAYERS) as [LayerKey, typeof DATA_LAYERS[LayerKey]][];
+  const toggleFullscreen = async () => {
+    if (!shellRef.current) return;
+    if (document.fullscreenElement === shellRef.current) {
+      await document.exitFullscreen();
+      return;
+    }
+    await shellRef.current.requestFullscreen();
+  };
+
+  const jumpTo = (center: [number, number], targetZoom: number) => {
+    mapInstanceRef.current?.flyTo(center, targetZoom, {
+      animate: true,
+      duration: 1.8,
+      easeLinearity: 0.25,
+    });
+  };
+
+  const layers = Object.entries(DATA_LAYERS) as [LayerKey, (typeof DATA_LAYERS)[LayerKey]][];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border" style={{ background: "rgba(10,15,30,0.55)", borderColor: "rgba(255,255,255,0.06)" }}>
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+    <div
+      ref={shellRef}
+      className="relative overflow-hidden rounded-[26px] border"
+      style={{
+        background: "rgba(10,15,30,0.62)",
+        borderColor: "rgba(255,255,255,0.08)",
+        boxShadow: "0 18px 60px rgba(0,0,0,0.34)",
+      }}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "rgba(110,231,183,0.1)", border: "1px solid rgba(110,231,183,0.15)" }}>
-            <span className="text-sm">🗺️</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "rgba(110,231,183,0.1)", border: "1px solid rgba(110,231,183,0.15)" }}>
+            <span className="text-sm">🛰️</span>
           </div>
           <div>
-            <span className="text-sm font-bold text-white/90">Global Intelligence Map</span>
-            <span className="ml-2 text-[10px] text-white/30">Zoom: {zoom}x · Click markers for details</span>
+            <div className="text-sm font-bold text-white/90">Satellite Drone View</div>
+            <div className="text-[10px] text-white/35">ESRI imagery · deeper zoom · fullscreen mode · live overlays</div>
           </div>
         </div>
 
-        {/* Layer toggle pills */}
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            className="rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/80"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            Zoom +
+          </button>
+          <button
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            className="rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/80"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            Zoom -
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="rounded-full px-3 py-1.5 text-[11px] font-semibold"
+            style={{ background: "rgba(96,165,250,0.12)", border: "1px solid rgba(96,165,250,0.24)", color: "#93c5fd" }}
+          >
+            {isFullscreen ? "Exit Fullscreen" : "Fullscreen 4K View"}
+          </button>
+          <span className="rounded-full px-3 py-1.5 text-[11px] font-bold" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#cbd5e1" }}>
+            Zoom {zoom}x
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <div className="flex flex-wrap gap-1.5">
           {layers.map(([key, layer]) => (
             <button
               key={key}
@@ -214,32 +289,43 @@ export default function InteractiveMap() {
               className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold tracking-wide transition-all duration-200"
               style={{
                 background: activeLayer === key ? `${layer.color}20` : "rgba(255,255,255,0.03)",
-                border: `1px solid ${activeLayer === key ? `${layer.color}40` : "rgba(255,255,255,0.06)"}`,
-                color: activeLayer === key ? layer.color : "rgba(255,255,255,0.4)",
+                border: `1px solid ${activeLayer === key ? `${layer.color}45` : "rgba(255,255,255,0.06)"}`,
+                color: activeLayer === key ? layer.color : "rgba(255,255,255,0.45)",
               }}
             >
-              <span className="text-xs">{layer.icon}</span>
+              <span>{layer.icon}</span>
               <span className="hidden sm:inline">{layer.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {FLY_TO_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => jumpTo(preset.center, preset.zoom)}
+              className="rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/72"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              {preset.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Map */}
-      <div ref={mapRef} style={{ height: 520, width: "100%" }} />
+      <div ref={mapRef} style={{ height: isFullscreen ? "calc(100vh - 146px)" : 640, width: "100%" }} />
 
-      {/* Bottom stats bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-2.5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center gap-4">
-          {DATA_LAYERS[activeLayer].points.slice(0, 4).map((pt, i) => (
-            <div key={i} className="flex items-center gap-2 text-[11px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <div className="flex flex-wrap items-center gap-4">
+          {DATA_LAYERS[activeLayer].points.slice(0, 4).map((point) => (
+            <div key={point.label} className="flex items-center gap-2 text-[11px]">
               <div className="h-1.5 w-1.5 rounded-full" style={{ background: DATA_LAYERS[activeLayer].color, boxShadow: `0 0 6px ${DATA_LAYERS[activeLayer].color}` }} />
-              <span className="text-white/40">{pt.label}</span>
-              <span className="font-mono font-bold" style={{ color: DATA_LAYERS[activeLayer].color }}>{pt.value}</span>
+              <span className="text-white/45">{point.label}</span>
+              <span className="font-mono font-bold" style={{ color: DATA_LAYERS[activeLayer].color }}>{point.value}</span>
             </div>
           ))}
         </div>
-        <span className="text-[10px] text-white/20">Scroll to zoom · Drag to pan · Click for details</span>
+        <span className="text-[10px] text-white/25">Scroll to zoom · Drag to pan · Click markers · Use fullscreen for drone-style view</span>
       </div>
     </div>
   );
