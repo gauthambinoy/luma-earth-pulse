@@ -109,7 +109,19 @@ function DashboardInner() {
   if (!themeMounted) return <SkeletonLoader height={600} message="Loading..." />;
 
   return (
-    <div className="relative flex min-h-screen" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
+    <div className="relative flex min-h-screen" style={{ background: "#030810", color: "var(--text-primary)" }}>
+      {/* Fixed NASA deep-space background — visible everywhere */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage: "url(https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          opacity: 0.2,
+        }}
+      />
+      <div className="pointer-events-none fixed inset-0 z-0" style={{ background: "radial-gradient(ellipse 90% 80% at 50% 40%, transparent 0%, #030810 75%)" }} />
       <MeshBackground />
 
       {/* Anomaly detection alerts */}
@@ -199,7 +211,7 @@ function DashboardInner() {
         </div>
 
         {/* Content with liquid glass transitions */}
-        <div className="h-[calc(100vh-64px)] overflow-y-auto px-8 py-6" style={{ background: "#060b16" }}>
+        <div className="h-[calc(100vh-64px)] overflow-y-auto px-8 py-6" style={{ background: "transparent" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}

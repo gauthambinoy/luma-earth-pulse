@@ -94,18 +94,55 @@ export const LIVE_STATS: LiveStat[] = [
   { id: "child_labor", label: "Children in Child Labor", category: "Society", icon: "👧", baseValue: 160000000, perSecond: 0, unit: "", source: "ILO", color: "#e11d48", direction: "neutral" },
   { id: "no_electricity", label: "People Without Electricity", category: "Society", icon: "🔌", baseValue: 675000000, perSecond: 0, unit: "", source: "IEA", color: "#78716c", direction: "neutral" },
   { id: "no_clean_water", label: "People Without Clean Water", category: "Society", icon: "🚰", baseValue: 2000000000, perSecond: 0, unit: "", source: "WHO/UNICEF", color: "#0369a1", direction: "neutral" },
+
+  // ── Cosmic & Space ──
+  { id: "earth_rotation_km", label: "Earth Surface Traveled (km, Today)", category: "Cosmic & Space", icon: "🌍", baseValue: 0, perSecond: 1674.4 / 3.6, unit: "km", source: "NASA", color: "#22d3ee", direction: "up" },
+  { id: "earth_orbit_km", label: "Earth Orbital Distance (km, Today)", category: "Cosmic & Space", icon: "☀️", baseValue: 0, perSecond: 107226 / 3.6, unit: "km", source: "NASA JPL", color: "#fbbf24", direction: "up" },
+  { id: "light_travel_km", label: "Light Traveled (km, Today)", category: "Cosmic & Space", icon: "💫", baseValue: 0, perSecond: 299792.458, unit: "km", source: "Physics", color: "#f0abfc", direction: "up" },
+  { id: "iss_orbits", label: "ISS Orbits (Today)", category: "Cosmic & Space", icon: "🛸", baseValue: 0, perSecond: 15.5 / 86400, unit: "", source: "NASA ISS", color: "#a78bfa", direction: "up" },
+  { id: "meteors_entering", label: "Meteors Entering Atmosphere (Today)", category: "Cosmic & Space", icon: "☄️", baseValue: 0, perSecond: 48000000000 / 86400, unit: "", source: "NASA NEO", color: "#f97316", direction: "up" },
+  { id: "stars_born", label: "Stars Born in Universe (Year)", category: "Cosmic & Space", icon: "⭐", baseValue: 0, perSecond: 275000000 / SECS_PER_YEAR, unit: "", source: "ESA", color: "#fcd34d", direction: "up" },
+  { id: "universe_expansion_km", label: "Universe Expanded (km, Today)", category: "Cosmic & Space", icon: "🔭", baseValue: 0, perSecond: 73.3 * 3.086e19 / SECS_PER_YEAR, unit: "km", source: "Hubble Const.", color: "#818cf8", direction: "up" },
+
+  // ── Atmosphere & Wind ──
+  { id: "lightning_strikes", label: "Lightning Strikes (Today)", category: "Atmosphere & Wind", icon: "⚡", baseValue: 0, perSecond: 8640000 / 86400, unit: "", source: "NASA LIS", color: "#fbbf24", direction: "up" },
+  { id: "avg_wind_speed", label: "Global Avg Wind Speed", category: "Atmosphere & Wind", icon: "💨", baseValue: 12.5, perSecond: 0, unit: "km/h", source: "NOAA", color: "#38bdf8", direction: "neutral" },
+  { id: "hurricanes_active", label: "Active Tropical Cyclones", category: "Atmosphere & Wind", icon: "🌀", baseValue: 5, perSecond: 0, unit: "", source: "NOAA NHC", color: "#ef4444", direction: "neutral" },
+  { id: "tornadoes_today", label: "Tornadoes (Today, Global Est.)", category: "Atmosphere & Wind", icon: "🌪️", baseValue: 0, perSecond: 1800 / 86400, unit: "", source: "NOAA SPC", color: "#a3a3a3", direction: "up" },
+  { id: "rain_liters", label: "Rain Fallen on Earth (L, Today)", category: "Atmosphere & Wind", icon: "🌧️", baseValue: 0, perSecond: 1.4e15 / 86400, unit: "L", source: "USGS", color: "#0ea5e9", direction: "up" },
+  { id: "air_molecules_breath", label: "Air Molecules/Breath (All Humans)", category: "Atmosphere & Wind", icon: "🫁", baseValue: 2.5e25, perSecond: 0, unit: "", source: "Physics", color: "#94a3b8", direction: "neutral" },
+
+  // ── Oceans & Water ──
+  { id: "ocean_waves", label: "Ocean Waves Breaking (Today)", category: "Oceans & Water", icon: "🌊", baseValue: 0, perSecond: 2500000, unit: "", source: "NOAA", color: "#0284c7", direction: "up" },
+  { id: "whale_songs", label: "Whale Songs Detected (Today)", category: "Oceans & Water", icon: "🐋", baseValue: 0, perSecond: 50000 / 86400, unit: "", source: "NOAA Acoustics", color: "#2dd4bf", direction: "up" },
+  { id: "ice_melted", label: "Arctic Ice Melted (tons, Year)", category: "Oceans & Water", icon: "🧊", baseValue: 0, perSecond: 267000000000 / SECS_PER_YEAR, unit: "t", source: "NASA GRACE", color: "#67e8f9", direction: "up" },
+  { id: "sea_level_rise", label: "Sea Level Rise Since 1900", category: "Oceans & Water", icon: "📏", baseValue: 0.21, perSecond: 0.0036 / SECS_PER_YEAR, unit: "m", source: "IPCC", color: "#0891b2", direction: "up" },
+  { id: "coral_bleached", label: "Coral Reef Area Bleached (%)", category: "Oceans & Water", icon: "🪸", baseValue: 14, perSecond: 0, unit: "%", source: "NOAA CRW", color: "#fb923c", direction: "neutral" },
+
+  // ── Geological ──
+  { id: "volcanoes_active", label: "Active Volcanoes Right Now", category: "Geological", icon: "🌋", baseValue: 45, perSecond: 0, unit: "", source: "Smithsonian GVP", color: "#ef4444", direction: "neutral" },
+  { id: "tectonic_mm", label: "Tectonic Plates Moved (mm, Year)", category: "Geological", icon: "🗻", baseValue: 0, perSecond: 50 / SECS_PER_YEAR, unit: "mm", source: "USGS", color: "#78716c", direction: "up" },
+  { id: "earthquakes_today", label: "Earthquakes (Today, All)", category: "Geological", icon: "📳", baseValue: 0, perSecond: 55 / 86400, unit: "", source: "USGS", color: "#eab308", direction: "up" },
+  { id: "earth_core_temp", label: "Earth Core Temperature", category: "Geological", icon: "🔥", baseValue: 5400, perSecond: 0, unit: "°C", source: "Science", color: "#f97316", direction: "neutral" },
+
+  // ── Biological ──
+  { id: "heartbeats_all", label: "Human Heartbeats (Today, All)", category: "Biological", icon: "💓", baseValue: 0, perSecond: 8.05e9 * 72 / 60, unit: "", source: "Estimated", color: "#ec4899", direction: "up" },
+  { id: "neurons_firing", label: "Neurons Firing/sec (1 Brain)", category: "Biological", icon: "🧠", baseValue: 86000000000, perSecond: 0, unit: "", source: "Neuroscience", color: "#a78bfa", direction: "neutral" },
+  { id: "cells_replaced", label: "Human Cells Replaced (Today)", category: "Biological", icon: "🧬", baseValue: 0, perSecond: 3800000, unit: "", source: "Nature", color: "#4ade80", direction: "up" },
+  { id: "bacteria_human", label: "Bacteria in Human Body", category: "Biological", icon: "🦠", baseValue: 38000000000000, perSecond: 0, unit: "", source: "NIH", color: "#fb923c", direction: "neutral" },
+  { id: "trees_on_earth", label: "Trees on Earth", category: "Biological", icon: "🌲", baseValue: 3040000000000, perSecond: -0.32, unit: "", source: "Nature", color: "#16a34a", direction: "down" },
 ];
 
 export function computeLiveValue(stat: LiveStat): number {
   const secs = elapsed();
   if (stat.perSecond === 0) return stat.baseValue;
 
-  // For "today" stats, use seconds since midnight UTC
+  // For "Today" stats, use seconds since midnight UTC
   if (stat.label.includes("Today")) {
     const now = new Date();
     const midnightUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const secsSinceMidnight = (Date.now() - midnightUTC.getTime()) / 1000;
-    return Math.floor(stat.baseValue + secsSinceMidnight * stat.perSecond);
+    return stat.baseValue + secsSinceMidnight * stat.perSecond;
   }
 
   // For "Year" stats, use seconds since Jan 1 of current year
@@ -113,10 +150,10 @@ export function computeLiveValue(stat: LiveStat): number {
     const now = new Date();
     const jan1 = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
     const secsSinceJan1 = (Date.now() - jan1.getTime()) / 1000;
-    return Math.floor(stat.baseValue + secsSinceJan1 * stat.perSecond);
+    return stat.baseValue + secsSinceJan1 * stat.perSecond;
   }
 
-  return Math.floor(stat.baseValue + secs * stat.perSecond);
+  return stat.baseValue + secs * stat.perSecond;
 }
 
 export const STAT_CATEGORIES = [...new Set(LIVE_STATS.map((s) => s.category))];
