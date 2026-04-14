@@ -218,7 +218,7 @@ function DashboardInner() {
             className="mt-10 border-t pb-6 pt-4 text-center text-[11px]"
             style={{ borderColor: "rgba(255,255,255,0.04)", color: "var(--text-muted)" }}
           >
-            <span className="text-aurora">Sapien Signal</span> — Built with Next.js 14 · TypeScript · TailwindCSS · CesiumJS · 200+ APIs · AI Intelligence
+            <span className="text-aurora">Sapien Signal</span> — Built with Next.js 14 · TypeScript · TailwindCSS · 200+ APIs · AI Intelligence
           </footer>
         </div>
       </main>

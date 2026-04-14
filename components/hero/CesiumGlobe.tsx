@@ -1,327 +1,111 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect } from "react";
+import createGlobe from "cobe";
 
-/* ─── CesiumGlobe ───
-   Google Earth-style 3D globe with real satellite imagery.
-   Uses CesiumJS with Cesium Ion for terrain + imagery tiles.
-   Supports zoom from outer space → street level. */
+export default function CesiumGlobe() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pointerInteracting = useRef<number | null>(null);
+  const pointerInteractionMovement = useRef(0);
+  const phiRef = useRef(0);
 
-// Load Cesium CSS from CDN
-if (typeof window !== "undefined") {
-  const id = "cesium-widgets-css";
-  if (!document.getElementById(id)) {
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = "https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium/Widgets/widgets.css";
-    document.head.appendChild(link);
-  }
-}
-
-interface CesiumGlobeProps {
-  onReady?: () => void;
-  flyToLocation?: { lat: number; lng: number; altitude?: number } | null;
-  showOverlays?: boolean;
-}
-
-export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = true }: CesiumGlobeProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<any>(null);
-  const overlayCleanupRef = useRef<{ remove: () => void } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const initCesium = useCallback(async () => {
-    if (!containerRef.current || viewerRef.current) return;
-
-    try {
-      const Cesium = await import("cesium");
-
-      // Configure Cesium Ion token
-      const token = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
-      if (token) {
-        Cesium.Ion.defaultAccessToken = token;
-      }
-
-      // Create viewer — simple and robust
-      const viewer = new Cesium.Viewer(containerRef.current, {
-        baseLayerPicker: false,
-        animation: false,
-        timeline: false,
-        fullscreenButton: false,
-        vrButton: false,
-        geocoder: false,
-        homeButton: false,
-        infoBox: false,
-        sceneModePicker: false,
-        selectionIndicator: false,
-        navigationHelpButton: false,
-        creditContainer: document.createElement("div"),
-        orderIndependentTranslucency: true,
-        contextOptions: {
-          webgl: {
-            alpha: true,
-            antialias: true,
-            powerPreference: "high-performance",
-          },
-        },
-      });
-
-      // Add satellite imagery
-      try {
-        // Remove default layer
-        viewer.imageryLayers.removeAll();
-
-        if (token) {
-          // Cesium Ion Bing Maps Aerial imagery
-          const ionImagery = await Cesium.IonImageryProvider.fromAssetId(2);
-          viewer.imageryLayers.addImageryProvider(ionImagery);
-        } else {
-          // Fallback: OpenStreetMap
-          viewer.imageryLayers.addImageryProvider(
-            new Cesium.OpenStreetMapImageryProvider({
-              url: "https://tile.openstreetmap.org/",
-            })
-          );
-        }
-      } catch (imgErr) {
-        console.warn("Imagery failed, using OSM fallback:", imgErr);
-        viewer.imageryLayers.removeAll();
-        viewer.imageryLayers.addImageryProvider(
-          new Cesium.OpenStreetMapImageryProvider({
-            url: "https://tile.openstreetmap.org/",
-          })
-        );
-      }
-
-      // Add terrain if token available
-      if (token) {
-        try {
-          const terrain = await Cesium.CesiumTerrainProvider.fromIonAssetId(1, {
-            requestWaterMask: true,
-            requestVertexNormals: true,
-          });
-          viewer.terrainProvider = terrain;
-        } catch (terrErr) {
-          console.warn("Terrain loading failed:", terrErr);
-        }
-      }
-
-      // Scene atmosphere & space styling
-      const scene = viewer.scene;
-      if (scene.skyAtmosphere) {
-        scene.skyAtmosphere.hueShift = -0.05;
-        scene.skyAtmosphere.saturationShift = 0.1;
-        scene.skyAtmosphere.brightnessShift = -0.1;
-      }
-      scene.fog.enabled = true;
-      scene.globe.enableLighting = true;
-      scene.globe.atmosphereLightIntensity = 8.0;
-      scene.globe.showGroundAtmosphere = true;
-
-      // Stars and sun
-      if (scene.skyBox) (scene.skyBox as any).show = true;
-      if (scene.sun) scene.sun.show = true;
-      if (scene.moon) scene.moon.show = true;
-
-      // High-quality rendering
-      scene.globe.maximumScreenSpaceError = 1.5;
-      scene.highDynamicRange = true;
-      scene.postProcessStages.fxaa.enabled = true;
-
-      // Set initial camera: full Earth view from space
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(20, 20, 18000000),
-        orientation: {
-          heading: Cesium.Math.toRadians(0),
-          pitch: Cesium.Math.toRadians(-90),
-          roll: 0,
-        },
-      });
-
-      // Smooth auto-rotation
-      let lastTime = Date.now();
-      const rotationSpeed = 0.3; // degrees per second
-      const removeRotation = viewer.clock.onTick.addEventListener(() => {
-        const now = Date.now();
-        const delta = (now - lastTime) / 1000;
-        lastTime = now;
-
-        if (!scene.screenSpaceCameraController.enableInputs) return;
-
-        const cameraPosition = viewer.camera.positionCartographic;
-        if (cameraPosition) {
-          const newLon =
-            Cesium.Math.toDegrees(cameraPosition.longitude) +
-            rotationSpeed * delta;
-          viewer.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(
-              newLon,
-              Cesium.Math.toDegrees(cameraPosition.latitude),
-              cameraPosition.height
-            ),
-          });
-        }
-      });
-
-      // Pause rotation on user interaction
-      let userInteracting = false;
-      let interactionTimeout: NodeJS.Timeout;
-      const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-
-      handler.setInputAction(() => {
-        userInteracting = true;
-        scene.screenSpaceCameraController.enableInputs = true;
-        clearTimeout(interactionTimeout);
-      }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
-
-      handler.setInputAction(() => {
-        userInteracting = false;
-        interactionTimeout = setTimeout(() => {
-          if (!userInteracting) {
-            scene.screenSpaceCameraController.enableInputs = true;
-          }
-        }, 3000);
-      }, Cesium.ScreenSpaceEventType.LEFT_UP);
-
-      handler.setInputAction(() => {
-        userInteracting = true;
-        clearTimeout(interactionTimeout);
-      }, Cesium.ScreenSpaceEventType.WHEEL);
-
-      // Store refs for cleanup
-      viewerRef.current = viewer;
-      (viewerRef.current as any)._rotationHandler = removeRotation;
-      (viewerRef.current as any)._eventHandler = handler;
-
-      setLoading(false);
-      onReady?.();
-
-      // Load data overlays (earthquake pins, ISS tracker, weather markers)
-      if (showOverlays) {
-        try {
-          const { addAllOverlays } = await import("./overlays");
-          const cleanup = await addAllOverlays(viewer);
-          overlayCleanupRef.current = cleanup;
-        } catch (err) {
-          console.warn("Failed to load globe overlays:", err);
-        }
-      }
-    } catch (err: any) {
-      console.error("Failed to initialize CesiumJS:", err?.message || err);
-      setError(err?.message || "Failed to load 3D globe");
-      setLoading(false);
-    }
-  }, [onReady, showOverlays]);
-
-  // Initialize
   useEffect(() => {
-    initCesium();
+    if (!canvasRef.current) return;
+
+    let width = 0;
+    const onResize = () => {
+      if (canvasRef.current) width = canvasRef.current.offsetWidth;
+    };
+    window.addEventListener("resize", onResize);
+    onResize();
+
+    const globe = createGlobe(canvasRef.current, {
+      devicePixelRatio: 2,
+      width: width * 2,
+      height: width * 2,
+      phi: 0,
+      theta: 0.25,
+      dark: 1,
+      diffuse: 1.2,
+      mapSamples: 24000,
+      mapBrightness: 8,
+      baseColor: [0.15, 0.18, 0.25],
+      markerColor: [0.43, 0.91, 0.72],
+      glowColor: [0.08, 0.12, 0.2],
+      markers: [
+        { location: [40.7128, -74.006], size: 0.06 },
+        { location: [51.5074, -0.1278], size: 0.06 },
+        { location: [35.6762, 139.6503], size: 0.06 },
+        { location: [48.8566, 2.3522], size: 0.05 },
+        { location: [-33.8688, 151.2093], size: 0.05 },
+        { location: [25.2048, 55.2708], size: 0.05 },
+        { location: [19.076, 72.8777], size: 0.05 },
+        { location: [-23.5505, -46.6333], size: 0.05 },
+        { location: [55.7558, 37.6173], size: 0.04 },
+        { location: [1.3521, 103.8198], size: 0.04 },
+        { location: [37.5665, 126.978], size: 0.04 },
+        { location: [30.0444, 31.2357], size: 0.04 },
+      ],
+    });
+
+    // Animation loop — rotate globe and update size
+    let rafId: number;
+    const animate = () => {
+      if (!pointerInteracting.current) {
+        phiRef.current += 0.003;
+      }
+      globe.update({
+        phi: phiRef.current + pointerInteractionMovement.current,
+        width: width * 2,
+        height: width * 2,
+      });
+      rafId = requestAnimationFrame(animate);
+    };
+    rafId = requestAnimationFrame(animate);
 
     return () => {
-      if (overlayCleanupRef.current) {
-        overlayCleanupRef.current.remove();
-        overlayCleanupRef.current = null;
-      }
-      if (viewerRef.current) {
-        try {
-          const viewer = viewerRef.current;
-          if (viewer._rotationHandler) viewer._rotationHandler();
-          if (viewer._eventHandler) viewer._eventHandler.destroy();
-          if (!viewer.isDestroyed()) viewer.destroy();
-        } catch {}
-        viewerRef.current = null;
-      }
+      cancelAnimationFrame(rafId);
+      globe.destroy();
+      window.removeEventListener("resize", onResize);
     };
-  }, [initCesium]);
-
-  // Cinematic fly-to when location prop changes
-  useEffect(() => {
-    if (!flyToLocation || !viewerRef.current) return;
-
-    const Cesium = require("cesium");
-    const viewer = viewerRef.current;
-    const altitude = flyToLocation.altitude || 2000000;
-
-    // Two-phase cinematic: pull back → sweep in
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        flyToLocation.lng,
-        flyToLocation.lat,
-        altitude
-      ),
-      orientation: {
-        heading: Cesium.Math.toRadians(20),
-        pitch: Cesium.Math.toRadians(-35),
-        roll: 0,
-      },
-      duration: 3,
-      easingFunction: Cesium.EasingFunction.QUINTIC_IN_OUT,
-    });
-  }, [flyToLocation]);
+  }, []);
 
   return (
     <div className="cesium-globe-wrapper">
-      <div
-        ref={containerRef}
-        className="cesium-globe-container"
-        role="img"
-        aria-label="Interactive 3D satellite globe — drag to rotate, scroll to zoom from space to street level"
+      <canvas
+        ref={canvasRef}
+        onPointerDown={(e) => {
+          pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+          if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
+        }}
+        onPointerUp={() => {
+          pointerInteracting.current = null;
+          if (canvasRef.current) canvasRef.current.style.cursor = "grab";
+        }}
+        onPointerOut={() => {
+          pointerInteracting.current = null;
+          if (canvasRef.current) canvasRef.current.style.cursor = "grab";
+        }}
+        onMouseMove={(e) => {
+          if (pointerInteracting.current !== null) {
+            const delta = e.clientX - pointerInteracting.current;
+            pointerInteractionMovement.current = delta / 200;
+          }
+        }}
+        onTouchMove={(e) => {
+          if (pointerInteracting.current !== null && e.touches[0]) {
+            const delta = e.touches[0].clientX - pointerInteracting.current;
+            pointerInteractionMovement.current = delta / 200;
+          }
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          cursor: "grab",
+          contain: "layout paint size",
+          borderRadius: "50%",
+        }}
       />
-
-      {/* Loading overlay */}
-      {loading && (
-        <div className="globe-loading-overlay">
-          <div className="globe-loader">
-            <div className="globe-loader-ring" />
-          </div>
-          <span className="globe-loading-text">Loading satellite imagery...</span>
-        </div>
-      )}
-
-      {/* Error fallback */}
-      {error && (
-        <div className="globe-error-overlay">
-          <span>🌍</span>
-          <p>{error}</p>
-        </div>
-      )}
-
-      {/* Interaction hint */}
-      {!loading && !error && <GlobeHint />}
-    </div>
-  );
-}
-
-/* ─── Hint that fades out ─── */
-function GlobeHint() {
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!visible) return null;
-
-  return (
-    <div className="globe-touch-hint">
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        <path
-          d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span>Drag to explore · Scroll to zoom to street level</span>
     </div>
   );
 }

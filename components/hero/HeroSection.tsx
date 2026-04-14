@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
@@ -30,90 +30,28 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [featureIdx, setFeatureIdx] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Rotating feature text
   useEffect(() => {
     const t = setInterval(() => setFeatureIdx((i) => (i + 1) % FEATURES.length), 2500);
     return () => clearInterval(t);
   }, []);
 
-  // Starfield canvas background
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const stars = Array.from({ length: 200 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.3 + 0.05,
-      opacity: Math.random() * 0.8 + 0.2,
-      twinkleSpeed: Math.random() * 0.02 + 0.005,
-      twinklePhase: Math.random() * Math.PI * 2,
-    }));
-
-    let raf: number;
-    let t = 0;
-    const draw = () => {
-      t++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Nebula glow
-      const g1 = ctx.createRadialGradient(canvas.width * 0.3, canvas.height * 0.4, 0, canvas.width * 0.3, canvas.height * 0.4, canvas.width * 0.4);
-      g1.addColorStop(0, "rgba(110, 231, 183, 0.03)");
-      g1.addColorStop(1, "transparent");
-      ctx.fillStyle = g1;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const g2 = ctx.createRadialGradient(canvas.width * 0.7, canvas.height * 0.6, 0, canvas.width * 0.7, canvas.height * 0.6, canvas.width * 0.35);
-      g2.addColorStop(0, "rgba(96, 165, 250, 0.025)");
-      g2.addColorStop(1, "transparent");
-      ctx.fillStyle = g2;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Stars
-      stars.forEach((s) => {
-        const twinkle = Math.sin(t * s.twinkleSpeed + s.twinklePhase) * 0.4 + 0.6;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity * twinkle})`;
-        ctx.fill();
-
-        // Star glow
-        if (s.r > 1) {
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(110, 231, 183, ${0.05 * twinkle})`;
-          ctx.fill();
-        }
-
-        s.y -= s.speed;
-        if (s.y < -5) { s.y = canvas.height + 5; s.x = Math.random() * canvas.width; }
-      });
-
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
-
   return (
     <div className="hero-container" style={{ background: "#030810" }}>
-      {/* Starfield */}
-      <canvas ref={canvasRef} className="absolute inset-0 z-0" />
-
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 z-[1]" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(110,231,183,0.04) 0%, transparent 70%)" }} />
-      <div className="absolute inset-0 z-[1]" style={{ background: "radial-gradient(ellipse 60% 40% at 30% 60%, rgba(96,165,250,0.03) 0%, transparent 60%)" }} />
+      {/* Real NASA outer space background */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: "url(https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 0.35,
+        }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 z-[1]" style={{ background: "radial-gradient(ellipse 80% 70% at 50% 45%, rgba(3,8,16,0.3) 0%, rgba(3,8,16,0.85) 70%, #030810 100%)" }} />
 
       {/* Navigation */}
       <nav className="relative z-20 flex w-full items-center justify-between px-6 py-4 md:px-10">
@@ -122,7 +60,7 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
             <span className="text-lg">🌍</span>
           </div>
           <span className="text-base font-bold tracking-wider text-white">
-            <span className="text-aurora">SAPIEN</span> SIGNAL
+            <span style={{ color: "#6EE7B7" }}>SAPIEN</span> SIGNAL
           </span>
         </div>
 
@@ -189,7 +127,7 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
         <div className="flex items-center justify-center">
           <motion.span
             className="select-none text-[5rem] font-black leading-none text-white md:text-[8rem] lg:text-[10rem]"
-            style={{ letterSpacing: "-3px", textShadow: "0 0 80px rgba(110,231,183,0.1)" }}
+            style={{ letterSpacing: "-3px", textShadow: "0 0 80px rgba(110,231,183,0.15)" }}
             initial={{ opacity: 0, x: -40 }} animate={mounted ? { opacity: 1, x: 0 } : {}} transition={{ delay: 0.5, duration: 0.8 }}
           >
             W
@@ -278,7 +216,7 @@ export default function HeroSection({ onEnter }: HeroSectionProps) {
           className="mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-10"
           initial={{ opacity: 0, y: 20 }} animate={mounted ? { opacity: 1, y: 0 } : {}} transition={{ delay: 1.3, duration: 0.8 }}
         >
-          {STATS.map((s, i) => (
+          {STATS.map((s) => (
             <div key={s.label} className="flex items-center gap-2.5">
               <span className="text-lg">{s.icon}</span>
               <div>

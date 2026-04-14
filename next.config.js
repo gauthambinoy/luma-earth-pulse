@@ -1,5 +1,3 @@
-const webpack = require("webpack");
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -9,26 +7,8 @@ const nextConfig = {
       { protocol: "https", hostname: "apod.nasa.gov" },
       { protocol: "https", hostname: "flagcdn.com" },
       { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
-  },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          CESIUM_BASE_URL: JSON.stringify("https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium"),
-        })
-      );
-
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        http: false,
-        https: false,
-        zlib: false,
-        url: false,
-      };
-    }
-    return config;
   },
   async headers() {
     return [

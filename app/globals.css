@@ -769,7 +769,7 @@ button:active:not(:disabled) { transform: scale(0.97); }
   cursor: grabbing;
 }
 
-/* CesiumJS Globe Wrapper */
+/* Globe Wrapper (Cobe WebGL) */
 .cesium-globe-wrapper {
   position: relative;
   width: 100%;
@@ -778,135 +778,13 @@ button:active:not(:disabled) { transform: scale(0.97); }
   overflow: hidden;
 }
 
-.cesium-globe-container {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.cesium-globe-container canvas {
+.cesium-globe-wrapper canvas {
   cursor: grab;
   touch-action: none;
   border-radius: 50%;
 }
-.cesium-globe-container canvas:active {
+.cesium-globe-wrapper canvas:active {
   cursor: grabbing;
-}
-
-/* Hide all Cesium default widgets */
-.cesium-globe-container .cesium-widget-credits,
-.cesium-globe-container .cesium-viewer-toolbar,
-.cesium-globe-container .cesium-viewer-animationContainer,
-.cesium-globe-container .cesium-viewer-timelineContainer,
-.cesium-globe-container .cesium-viewer-fullscreenContainer,
-.cesium-globe-container .cesium-viewer-vrContainer,
-.cesium-globe-container .cesium-viewer-bottom {
-  display: none !important;
-}
-
-.cesium-globe-container .cesium-viewer {
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.cesium-globe-container .cesium-widget {
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-/* Globe loading overlay */
-.globe-loading-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  background: rgba(5, 10, 25, 0.7);
-  border-radius: 50%;
-  z-index: 10;
-}
-
-.globe-loading-text {
-  font-size: 0.7rem;
-  color: rgba(160, 200, 255, 0.6);
-  letter-spacing: 0.5px;
-}
-
-/* Globe error overlay */
-.globe-error-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: rgba(5, 10, 25, 0.8);
-  border-radius: 50%;
-  z-index: 10;
-}
-.globe-error-overlay span {
-  font-size: 2rem;
-}
-.globe-error-overlay p {
-  font-size: 0.75rem;
-  color: rgba(255, 150, 150, 0.8);
-}
-
-/* Globe loading spinner */
-.globe-loader {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.globe-loader-ring {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 3px solid rgba(100, 170, 255, 0.15);
-  border-top-color: rgba(100, 170, 255, 0.8);
-  animation: globeSpin 0.8s linear infinite;
-}
-
-@keyframes globeSpin {
-  to { transform: rotate(360deg); }
-}
-
-/* Drag-to-explore hint */
-.globe-touch-hint {
-  position: absolute;
-  bottom: -2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  color: rgba(160, 200, 255, 0.7);
-  background: rgba(10, 20, 40, 0.5);
-  border: 1px solid rgba(100, 170, 255, 0.12);
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  white-space: nowrap;
-  pointer-events: none;
-  animation: hintFade 4s ease-out forwards;
-}
-
-@keyframes hintFade {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  70%  { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 /* Bottom fade */
