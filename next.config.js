@@ -15,7 +15,7 @@ const nextConfig = {
     if (!isServer) {
       config.plugins.push(
         new webpack.DefinePlugin({
-          CESIUM_BASE_URL: JSON.stringify("/cesium"),
+          CESIUM_BASE_URL: JSON.stringify("https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium"),
         })
       );
 

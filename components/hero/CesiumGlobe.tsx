@@ -1,12 +1,23 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import "cesium/Build/Cesium/Widgets/widgets.css";
 
 /* ─── CesiumGlobe ───
    Google Earth-style 3D globe with real satellite imagery.
    Uses CesiumJS with Cesium Ion for terrain + imagery tiles.
    Supports zoom from outer space → street level. */
+
+// Load Cesium CSS from CDN
+if (typeof window !== "undefined") {
+  const id = "cesium-widgets-css";
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = "https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium/Widgets/widgets.css";
+    document.head.appendChild(link);
+  }
+}
 
 interface CesiumGlobeProps {
   onReady?: () => void;
