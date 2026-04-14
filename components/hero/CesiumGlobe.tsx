@@ -44,22 +44,9 @@ export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = tru
         Cesium.Ion.defaultAccessToken = token;
       }
 
-      // Create viewer with premium settings
+      // Create viewer — simple and robust
       const viewer = new Cesium.Viewer(containerRef.current, {
-        // Imagery
         baseLayerPicker: false,
-        // @ts-expect-error imageryProvider: false disables default layer in Cesium 1.104+
-        imageryProvider: false,
-
-        // Terrain
-        terrain: token
-          ? Cesium.Terrain.fromWorldTerrain({
-              requestWaterMask: true,
-              requestVertexNormals: true,
-            })
-          : undefined,
-
-        // Disable default UI chrome for clean look
         animation: false,
         timeline: false,
         fullscreenButton: false,
@@ -71,8 +58,6 @@ export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = tru
         selectionIndicator: false,
         navigationHelpButton: false,
         creditContainer: document.createElement("div"),
-
-        // Rendering
         orderIndependentTranslucency: true,
         contextOptions: {
           webgl: {
@@ -83,26 +68,44 @@ export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = tru
         },
       });
 
-      // Add Bing Maps or Cesium Ion default imagery
-      if (token) {
-        try {
-          const imageryProvider = await Cesium.IonImageryProvider.fromAssetId(2);
-          viewer.imageryLayers.addImageryProvider(imageryProvider);
-        } catch {
-          // Fallback to OpenStreetMap if Ion fails
+      // Add satellite imagery
+      try {
+        // Remove default layer
+        viewer.imageryLayers.removeAll();
+
+        if (token) {
+          // Cesium Ion Bing Maps Aerial imagery
+          const ionImagery = await Cesium.IonImageryProvider.fromAssetId(2);
+          viewer.imageryLayers.addImageryProvider(ionImagery);
+        } else {
+          // Fallback: OpenStreetMap
           viewer.imageryLayers.addImageryProvider(
             new Cesium.OpenStreetMapImageryProvider({
               url: "https://tile.openstreetmap.org/",
             })
           );
         }
-      } else {
-        // No token — use OSM as fallback
+      } catch (imgErr) {
+        console.warn("Imagery failed, using OSM fallback:", imgErr);
+        viewer.imageryLayers.removeAll();
         viewer.imageryLayers.addImageryProvider(
           new Cesium.OpenStreetMapImageryProvider({
             url: "https://tile.openstreetmap.org/",
           })
         );
+      }
+
+      // Add terrain if token available
+      if (token) {
+        try {
+          const terrain = await Cesium.CesiumTerrainProvider.fromIonAssetId(1, {
+            requestWaterMask: true,
+            requestVertexNormals: true,
+          });
+          viewer.terrainProvider = terrain;
+        } catch (terrErr) {
+          console.warn("Terrain loading failed:", terrErr);
+        }
       }
 
       // Scene atmosphere & space styling
@@ -205,12 +208,12 @@ export default function CesiumGlobe({ onReady, flyToLocation, showOverlays = tru
           console.warn("Failed to load globe overlays:", err);
         }
       }
-    } catch (err) {
-      console.error("Failed to initialize CesiumJS:", err);
-      setError("Failed to load 3D globe");
+    } catch (err: any) {
+      console.error("Failed to initialize CesiumJS:", err?.message || err);
+      setError(err?.message || "Failed to load 3D globe");
       setLoading(false);
     }
-  }, [onReady]);
+  }, [onReady, showOverlays]);
 
   // Initialize
   useEffect(() => {
